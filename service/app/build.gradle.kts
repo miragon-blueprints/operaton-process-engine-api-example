@@ -20,30 +20,24 @@ springBoot {
     buildInfo()
 }
 
-configurations.all {
-    // CIB seven 2.2.0 pulls in both the generic `cibseven-webclient-web` and the Spring-Boot-4
-    // variant `cibseven-webclient-web-spring-boot-4`. The generic one calls
-    // PathMatchConfigurer.setUseSuffixPatternMatch(...), which was removed in Spring 7 / Spring
-    // Boot 4, and crashes the app on start-up. Drop it so only the SB4 variant remains.
-    exclude(group = "org.cibseven.webapp", module = "cibseven-webclient-web")
-}
-
 dependencies {
-    // The process-engine-adapter BOM aligns the process-engine-api / adapter / worker versions.
-    implementation(platform(libs.process.engine.adapter.cib7.bom))
+    // The process-engine-adapter BOM aligns the process-engine-api / adapter / worker versions;
+    // the Operaton BOM aligns the transitive engine modules pulled by the webapp/rest starters.
+    implementation(platform(libs.process.engine.adapter.operaton.bom))
+    implementation(platform(libs.operaton.bom))
     implementation(libs.bundles.defaultService)
     implementation(libs.bundles.database)
-    // The embedded CIB seven engine still ships the webapp (Cockpit/Tasklist) and the `/engine-rest`
+    // The embedded Operaton engine still ships the webapps (Cockpit/Tasklist/Admin) and the `/engine-rest`
     // API used by the Bruno e2e scenarios; the process-engine-api layer is added on top of it.
-    implementation(libs.bundles.cibseven)
+    implementation(libs.bundles.operaton)
     // process-engine-api: the abstraction used to drive the engine (start/correlate/complete) and to
     // implement the BPMN service tasks as `@ProcessEngineWorker` beans consuming external tasks.
     implementation(libs.bundles.processEngineApi)
     implementation(libs.springdoc)
     implementation(libs.bpmn.to.code.runtime)
     testImplementation(libs.bundles.test)
-    testImplementation(libs.bundles.cib7ProcessTest)
-    testImplementation(libs.bundles.cib7JGiven)
+    testImplementation(platform(libs.operaton.bom))
+    testImplementation(libs.bundles.operatonProcessTest)
     testImplementation(libs.bpmn.to.code.testing)
     testImplementation(project(":service:common-architecture-tests"))
 }
@@ -56,6 +50,10 @@ tasks.register<GenerateBpmnModelsTask>("generateBpmnModels") {
     outputFolderPath = "$projectDir/src/main/kotlin"
     packagePath = "io.miragon.blueprint.adapter.process"
     outputLanguage = OutputLanguage.KOTLIN
+    // The models use the shared Camunda-7 `camunda:` namespace, which Operaton reads natively (Operaton
+    // is fully backward-compatible with Camunda 7 BPMN/DMN). bpmn-to-code's OPERATON target instead
+    // expects `operaton:`-namespaced models, so generation stays on CAMUNDA_7 — the generated constants
+    // are engine-agnostic BPMN strings either way. See ADR-0013.
     processEngine = ProcessEngine.CAMUNDA_7
 }
 
@@ -81,13 +79,13 @@ pitest {
             "io.miragon.blueprint.adapter.process.*ProcessApi*",
             "io.miragon.blueprint.adapter.process.HistoryCleanupConfiguration*",
             "io.miragon.blueprint.adapter.process.EngineApiConfiguration*",
-            "io.miragon.blueprint.CibsevenBikeLeasingApplication*",
+            "io.miragon.blueprint.OperatonBikeLeasingApplication*",
             "io.miragon.blueprint.BikeCatalogueSeeder*",
             "io.miragon.blueprint.adapter.inbound.rest.DevCorsConfiguration*",
             "io.miragon.blueprint.adapter.inbound.rest.OpenApiConfiguration*",
             // External-task worker beans are thin @ProcessEngineWorker adapters exercised by the
             // process tests, which mutation testing excludes.
-            "io.miragon.blueprint.adapter.inbound.cibseven.*",
+            "io.miragon.blueprint.adapter.inbound.operaton.*",
         ),
     )
     excludedTestClasses.set(
@@ -113,7 +111,7 @@ tasks.withType<BootJar> {
 // maintain (layered, non-root by default). See docs/adr/0011 and the "Run it in containers" section of
 // CONTRIBUTING.md. Build with `./gradlew :service:app:bootBuildImage`.
 tasks.named<BootBuildImage>("bootBuildImage") {
-    imageName.set("cibseven-process-engine-api-example/app:${project.version}")
+    imageName.set("operaton-process-engine-api-example/app:${project.version}")
     // Pin the JVM the buildpack installs to the version the code targets.
     environment.set(mapOf("BP_JVM_VERSION" to "21"))
 }

@@ -1,4 +1,4 @@
-package io.miragon.blueprint.adapter.outbound.cibseven
+package io.miragon.blueprint.adapter.outbound.operaton
 
 import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements
 import io.miragon.blueprint.domain.leasing.ApplicationId
@@ -6,12 +6,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.cibseven.bpm.engine.RuntimeService
-import org.cibseven.bpm.engine.TaskService
-import org.cibseven.bpm.engine.runtime.ProcessInstance
-import org.cibseven.bpm.engine.runtime.ProcessInstanceQuery
-import org.cibseven.bpm.engine.task.Task
-import org.cibseven.bpm.engine.task.TaskQuery
+import org.operaton.bpm.engine.RuntimeService
+import org.operaton.bpm.engine.TaskService
+import org.operaton.bpm.engine.runtime.ProcessInstance
+import org.operaton.bpm.engine.runtime.ProcessInstanceQuery
+import org.operaton.bpm.engine.task.Task
+import org.operaton.bpm.engine.task.TaskQuery
 import org.junit.jupiter.api.Test
 import java.util.Date
 import java.util.UUID

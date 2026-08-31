@@ -1,12 +1,12 @@
 package io.miragon.blueprint.adapter.process
 
-import org.cibseven.bpm.engine.ProcessEngine
-import org.cibseven.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
-import org.cibseven.bpm.engine.impl.cfg.ProcessEnginePlugin
+import org.operaton.bpm.engine.ProcessEngine
+import org.operaton.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
+import org.operaton.bpm.engine.impl.cfg.ProcessEnginePlugin
 import org.springframework.context.annotation.Configuration
 
 /**
- * Process-engine plugin that configures removal-time-based history cleanup. CIB seven auto-detects
+ * Process-engine plugin that configures removal-time-based history cleanup. Operaton auto-detects
  * beans implementing [ProcessEnginePlugin] and registers them with the embedded engine.
  */
 @Configuration

@@ -28,11 +28,11 @@ import io.miragon.blueprint.process.util.findProcessInstance
 import io.miragon.blueprint.process.util.fireTimer
 import io.mockk.every
 import io.mockk.verify
-import org.cibseven.bpm.engine.ProcessEngine
-import org.cibseven.bpm.engine.RuntimeService
-import org.cibseven.bpm.engine.TaskService
-import org.cibseven.bpm.engine.test.assertions.bpmn.BpmnAwareTests.assertThat
-import org.cibseven.bpm.engine.test.assertions.bpmn.BpmnAwareTests.init
+import org.operaton.bpm.engine.ProcessEngine
+import org.operaton.bpm.engine.RuntimeService
+import org.operaton.bpm.engine.TaskService
+import org.operaton.bpm.engine.test.assertions.bpmn.BpmnAwareTests.assertThat
+import org.operaton.bpm.engine.test.assertions.bpmn.BpmnAwareTests.init
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

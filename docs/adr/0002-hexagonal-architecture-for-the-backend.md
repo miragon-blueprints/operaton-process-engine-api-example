@@ -21,9 +21,9 @@ We structure `service/app` as a **hexagon (ports & adapters)** under `io.miragon
   operation. `application/port/outbound` — **`*Repository` / `*Port` / `*Process`** interfaces.
 - `application/service` — one `*Service` implementing exactly one inbound port; it may not call another
   service or any inbound port.
-- `adapter/inbound/{rest,cibseven}` — driving adapters (REST controllers and the external-topic
+- `adapter/inbound/{rest,operaton}` — driving adapters (REST controllers and the external-topic
   `@ProcessEngineWorker` beans that consume the engine's service-task work).
-- `adapter/outbound/{db,cibseven,dealer,notification,contract,insurance}` — driven adapters.
+- `adapter/outbound/{db,operaton,dealer,notification,contract,insurance}` — driven adapters.
 - `adapter/process` — the **generated** `*ProcessApi` (bpmn-to-code) plus engine config; a technical
   seam that fits neither side of the split.
 
@@ -41,7 +41,7 @@ violation:
   written and does not follow the hand-written conventions.
 
 Service-task logic lives **only** in external-topic `@ProcessEngineWorker` beans under
-`adapter/inbound/cibseven` — never in an embedded `JavaDelegate`, `ExecutionListener`, or `TaskListener`
+`adapter/inbound/operaton` — never in an embedded `JavaDelegate`, `ExecutionListener`, or `TaskListener`
 (see [execution-and-task-listeners.md](../execution-and-task-listeners.md) for that trade-off).
 
 ## Consequences

@@ -26,7 +26,7 @@ wraps:
 | ----------------------- | ---- | -------------------- |
 | Spring Boot app         | 8080 | ❌ no |
 | Postgres                | 5432 | ❌ no |
-| CIB seven engine schema | (shared DB schema in Postgres) | ❌ no |
+| Operaton engine schema  | (shared DB schema in Postgres) | ❌ no |
 
 Portless slugs a JS dev server, and this headless stack has none. Every collision source here — the
 Spring port, the Postgres port, and the shared engine schema — is **outside what portless wraps**, so

@@ -1,4 +1,4 @@
-package io.miragon.blueprint.adapter.inbound.cibseven
+package io.miragon.blueprint.adapter.inbound.operaton
 
 import dev.bpmcrafters.processengine.worker.BpmnErrorOccurred
 import dev.bpmcrafters.processengine.worker.ProcessEngineWorker

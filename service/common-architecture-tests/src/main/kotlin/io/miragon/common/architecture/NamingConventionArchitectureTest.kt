@@ -91,9 +91,9 @@ abstract class NamingConventionArchitectureTest(
         }
 
         @Test
-        fun `cibseven adapters follow naming conventions`() {
+        fun `operaton adapters follow naming conventions`() {
             checkNaming(
-                packageRoot = "..adapter.inbound.cibseven",
+                packageRoot = "..adapter.inbound.operaton",
                 allowedSuffixes =
                     listOf(
                         AllowedSuffix("Delegate", "JavaDelegate invoked by a BPMN service task"),

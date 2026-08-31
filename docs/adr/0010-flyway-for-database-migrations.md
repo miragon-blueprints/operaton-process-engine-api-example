@@ -14,8 +14,8 @@ destroys the data. Production needs schema changes that are **versioned, reviewa
 repeatable, and non-destructive**.
 
 Two concerns share the Postgres database: our application tables (`bike_portfolio`,
-`leasing_application`) and the CIB seven engine's `ACT_*` tables. The engine already manages its own
-schema via `camunda.bpm.database.schema-update: true`, so a migration tool must own **only** the
+`leasing_application`) and the Operaton engine's `ACT_*` tables. The engine already manages its own
+schema via `operaton.bpm.database.schema-update: true`, so a migration tool must own **only** the
 application tables.
 
 ## Decision

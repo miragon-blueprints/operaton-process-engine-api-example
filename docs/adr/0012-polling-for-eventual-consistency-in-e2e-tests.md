@@ -6,7 +6,7 @@
 ## Context
 
 Every command endpoint in this API is **asynchronous**. A command controller drives the embedded
-CIB seven engine through the `process-engine-api` (start / correlate a message / complete a task) and
+Operaton engine through the `process-engine-api` (start / correlate a message / complete a task) and
 returns **`202 Accepted`** immediately — it waits for the publish/correlation ack, not for the effect.
 The observable effect lands some unbounded time later: the async **job executor** drives the process to
 its next wait state, an external-task `@ProcessEngineWorker` polls its topic, runs, and writes the read
@@ -27,7 +27,7 @@ never by sleeping a guessed duration.
 - **Shared helpers** live in `bruno/collection.bru` (a collection-level `script:pre-request`, so they
   are in scope for every request): `pollUntil(config, predicate, opts)` and the convenience wrappers
   `pollApp(path, predicate)` (GET the app read model) and `pollEngine(path, predicate)` (GET the
-  CIB seven engine REST API). They return the instant the predicate is met and only wait the full
+  Operaton engine REST API). They return the instant the predicate is met and only wait the full
   budget when something is genuinely wrong — at which point the request's own assertions report the
   real, still-wrong state instead of a bare timeout.
 - **Budgets are env-driven** (`pollTimeoutMs` / `pollIntervalMs` in the environment file), so a sibling
@@ -42,7 +42,7 @@ never by sleeping a guessed duration.
   a history activity instance) until the resource the step asserts on exists.
 - **Division of labour holds:** Bruno asserts the **synchronous request/response contract** (status
   codes, DTO shape); genuinely engine-level, deterministic checks (timer fast-forward, full token
-  flow) stay in the JVM CIB seven process-test layer with Awaitility. See ADR-0004 for the test
+  flow) stay in the JVM Operaton process-test layer with Awaitility. See ADR-0004 for the test
   layering.
 - **The Bruno CLI is pinned** (`@usebruno/cli@4.0.0`): the script sandbox's capabilities (available
   globals, the `require` whitelist the helpers depend on) can change between majors, so an unpinned

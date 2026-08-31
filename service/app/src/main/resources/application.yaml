@@ -20,9 +20,9 @@ spring:
     problemdetails:
       enabled: true
 
-# process-engine-api (bpm-crafters): runs the cib-seven-embedded adapter, which polls external
+# process-engine-api (bpm-crafters): runs the operaton-embedded adapter, which polls external
 # service tasks / user tasks on a schedule and hands them to the @ProcessEngineWorker beans and the
-# UserTaskSupport subscription pool. Model deployment stays with CIB seven (see camunda.bpm below,
+# UserTaskSupport subscription pool. Model deployment stays with Operaton (see operaton.bpm below,
 # which also deploys the .form files), so the worker library's own deployment is disabled.
 dev:
   bpm-crafters:
@@ -31,7 +31,7 @@ dev:
         deployment:
           enabled: false
       adapter:
-        cib-seven-embedded:
+        operaton-embedded:
           enabled: true
           service-tasks:
             delivery-strategy: embedded_scheduled
@@ -67,18 +67,18 @@ springdoc:
   # Keep the engine-internal /engine-rest API out of the generated contract; only expose /api/**.
   paths-to-match: /api/**
 
-camunda:
+operaton:
   bpm:
     admin-user:
       id: admin
       password: admin
-    # Deploy BPMN, DMN and Camunda Forms from the classpath so the .form files resolve in the Tasklist.
+    # Deploy BPMN, DMN and Forms from the classpath so the .form files resolve in the Tasklist.
     deployment-resource-pattern:
       - classpath*:**/*.bpmn
       - classpath*:**/*.dmn
       - classpath*:**/*.form
     webapp:
-      application-path: /camunda
+      application-path: /operaton
     database:
       type: postgres
       schema-update: true
@@ -86,10 +86,3 @@ camunda:
     job-execution:
       wait-time-in-millis: 250
       max-wait: 1000
-
-cibseven:
-  webclient:
-    authentication:
-      # WARNING: This is a development/example secret key.
-      # DO NOT use this in production! Generate your own secure secret key.
-      jwtSecret: RtURHZ7SQYfLoX902wcjlvduW2qe9g0bjMUczmffjiTjzU9phbv3mK54zHMqeGK6cqgoEBTIUE6RqwvemSqbpD40qUPXVRElvDHGhn4OAEfjeEP2ANah8GJejSA08E820mForcQHBmediqg2DzIrxnDXyf2

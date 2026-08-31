@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for your interest in the CIB seven bike-leasing blueprint! Contributions of all kinds are
+Thanks for your interest in the Operaton bike-leasing blueprint! Contributions of all kinds are
 welcome — bug reports, feature ideas, docs, and code.
 
 ## Getting started
 
 ```bash
-git clone git@github.com:miragon-blueprints/cibseven-process-engine-api-example.git
-cd cibseven-process-engine-api-example
+git clone git@github.com:miragon-blueprints/operaton-process-engine-api-example.git
+cd operaton-process-engine-api-example
 npm ci && npm run hooks:install                                # BPMN lint + git hooks
 ```
 
@@ -27,7 +27,7 @@ docker compose -f stack/docker-compose.yml up -d   # Postgres
 |---|---|
 | Postgres | 5432 |
 | Backend (REST + `/engine-rest`) | 8080 |
-| CIB seven Cockpit / webapps | 8080/camunda (admin/admin) |
+| Operaton Cockpit / webapps | 8080/operaton (admin/admin) |
 | OpenAPI spec · Swagger UI | 8080/v3/api-docs · 8080/swagger-ui.html |
 | Actuator (health · liveness/readiness · prometheus) | 8080/actuator |
 
@@ -43,10 +43,10 @@ cd bruno && npx --yes @usebruno/cli@4.0.0 run . --env local -r
 ```
 
 They start a case over the domain REST endpoints, complete user tasks and fire timer jobs via the
-CIB seven `/engine-rest` API, and assert the whole flow — happy path, escalation, abort, DMN
+Operaton `/engine-rest` API, and assert the whole flow — happy path, escalation, abort, DMN
 rejection, the bike-unavailable → alternative-selection loop, and the incident demo.
 
-Confirm <http://localhost:8080/camunda> (admin/admin), <http://localhost:8080/swagger-ui.html> and
+Confirm <http://localhost:8080/operaton> (admin/admin), <http://localhost:8080/swagger-ui.html> and
 <http://localhost:8080/actuator/health> (status `UP`) all load.
 
 ## Run it in containers
@@ -56,7 +56,7 @@ build the image with Spring's buildpacks (no Dockerfile), then run it against Po
 is in [ADR-0011](docs/adr/0011-build-and-deployment-approach.md).
 
 ```bash
-# 1. build the OCI image (Spring buildpacks — no Dockerfile). Produces cibseven-process-engine-api-example/app:1.0-SNAPSHOT
+# 1. build the OCI image (Spring buildpacks — no Dockerfile). Produces operaton-process-engine-api-example/app:1.0-SNAPSHOT
 ./gradlew :service:app:bootBuildImage
 
 # 2. bring up Postgres
@@ -79,7 +79,7 @@ environment (they win over the baked defaults):
 | `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://postgres:5432/bikeleasing` |
 | `SPRING_DATASOURCE_USERNAME` / `_PASSWORD` | DB credentials | `admin` / `admin` |
 
-> **Not production-hardened.** The image carries the example `jwtSecret` and admin/admin credentials
+> **Not production-hardened.** The image carries the example admin/admin credentials
 > from `application.yaml`. Override them (and the DB credentials) before running anywhere real. Schema
 > is owned by Flyway and Hibernate only validates ([ADR-0010](docs/adr/0010-flyway-for-database-migrations.md)),
 > so the Postgres volume persists across `down`/`up` — reset it with `docker compose -f

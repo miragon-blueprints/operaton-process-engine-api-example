@@ -1,10 +1,10 @@
-package io.miragon.blueprint.adapter.outbound.cibseven
+package io.miragon.blueprint.adapter.outbound.operaton
 
 import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements
 import io.miragon.blueprint.application.port.outbound.TaskInboxPort
 import io.miragon.blueprint.domain.leasing.ApplicationId
-import org.cibseven.bpm.engine.RuntimeService
-import org.cibseven.bpm.engine.TaskService
+import org.operaton.bpm.engine.RuntimeService
+import org.operaton.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import java.time.ZoneId
 
@@ -14,7 +14,7 @@ import java.time.ZoneId
  * the inbox lists cases, and cases are resolved through the domain, correlated by id.
  *
  * This is a read-only query at the engine boundary. The process-engine-api has no server-side task
- * query, so the inbox reads the embedded CIB seven `TaskService` directly — the native interfaces that
+ * query, so the inbox reads the embedded Operaton `TaskService` directly — the native interfaces that
  * remain available alongside the API (see `docs/execution-and-task-listeners.md`). Task *completion*
  * still goes through the process-engine-api in [LeasingProcessAdapter].
  */

@@ -24,8 +24,8 @@ class BikeDealerAdapter : BikeDealerPort {
     /**
      * Demo mechanism (not a real integration fault): ordering one of these bikes makes the dealer
      * call fail as if the dealer's API were unreachable. `serviceTask_orderBike` is an external task
-     * consumed by [io.miragon.blueprint.adapter.inbound.cibseven.OrderBikeWorker], so an uncaught
-     * failure fails that external task; the cib-seven-embedded adapter retries it (3 attempts, its
+     * consumed by [io.miragon.blueprint.adapter.inbound.operaton.OrderBikeWorker], so an uncaught
+     * failure fails that external task; the operaton-embedded adapter retries it (3 attempts, its
      * default retry policy) and then raises an incident — the basis of the reproducible incident
      * demo. It stays available in [checkAvailability] so the flow reaches the order step (rather than
      * the out-of-stock branch) before failing.

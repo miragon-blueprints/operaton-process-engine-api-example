@@ -4,7 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.miragon.blueprint.application.port.inbound.ReportHandoverUseCase
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
-import org.cibseven.bpm.engine.MismatchingMessageCorrelationException
+import org.operaton.bpm.engine.MismatchingMessageCorrelationException
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
