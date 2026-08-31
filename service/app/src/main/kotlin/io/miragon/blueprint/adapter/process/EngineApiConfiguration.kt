@@ -1,6 +1,6 @@
 package io.miragon.blueprint.adapter.process
 
-import dev.bpmcrafters.processengineapi.adapter.cibseven.embedded.shared.EngineCommandExecutor
+import dev.bpmcrafters.processengineapi.adapter.operaton.embedded.shared.EngineCommandExecutor
 import dev.bpmcrafters.processengineapi.task.TaskSubscriptionApi
 import dev.bpmcrafters.processengineapi.task.support.UserTaskSupport
 import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Wires the process-engine-api into the embedded CIB seven engine.
+ * Wires the process-engine-api into the embedded Operaton engine.
  */
 @Configuration
 class EngineApiConfiguration {

@@ -1,11 +1,11 @@
-package io.miragon.blueprint.adapter.outbound.cibseven
+package io.miragon.blueprint.adapter.outbound.operaton
 
-import org.cibseven.bpm.engine.RuntimeService
-import org.cibseven.bpm.engine.TaskService
-import org.cibseven.bpm.engine.task.Task
+import org.operaton.bpm.engine.RuntimeService
+import org.operaton.bpm.engine.TaskService
+import org.operaton.bpm.engine.task.Task
 
 /**
- * Small read-only extension helpers over the CIB seven services used by [TaskInboxAdapter], so the
+ * Small read-only extension helpers over the Operaton services used by [TaskInboxAdapter], so the
  * adapter reads as intent instead of fluent query boilerplate. Both key on the process business key,
  * which this service sets to the application id.
  *

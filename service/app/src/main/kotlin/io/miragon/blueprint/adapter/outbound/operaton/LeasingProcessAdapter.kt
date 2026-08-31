@@ -1,4 +1,4 @@
-package io.miragon.blueprint.adapter.outbound.cibseven
+package io.miragon.blueprint.adapter.outbound.operaton
 
 import dev.bpmcrafters.processengineapi.CommonRestrictions
 import dev.bpmcrafters.processengineapi.correlation.CorrelateMessageCmd
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.CompletionException
 
 /**
- * Drives the embedded CIB seven engine through the process-engine-api. The application id is used as
+ * Drives the embedded Operaton engine through the process-engine-api. The application id is used as
  * both the process business key (so the `cancelBikeOrder` call activity keeps the same key) and the
  * correlation key (so later messages correlate to the right instance). The variable names come from
  * the typed process API generated from `bike-leasing.bpmn`.
@@ -68,7 +68,7 @@ class LeasingProcessAdapter(
     /**
      * Correlates [messageName] to the instance whose global `correlationKey` variable equals the id.
      * A no-longer-valid correlation (e.g. the token already left the wait state) surfaces the engine's
-     * [org.cibseven.bpm.engine.MismatchingMessageCorrelationException], which the REST advice maps to a
+     * [org.operaton.bpm.engine.MismatchingMessageCorrelationException], which the REST advice maps to a
      * 409 — so it is unwrapped from the [CompletionException] the async API wraps it in.
      */
     private fun correlate(messageName: String, id: ApplicationId) {

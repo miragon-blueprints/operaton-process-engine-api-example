@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean
 import java.time.Clock
 
 @SpringBootApplication
-class CibsevenBikeLeasingApplication {
+class OperatonBikeLeasingApplication {
 
     /** Single source of "now" for the app, so time-dependent logic can be pinned in tests. */
     @Bean
@@ -14,5 +14,5 @@ class CibsevenBikeLeasingApplication {
 }
 
 fun main(args: Array<String>) {
-    runApplication<CibsevenBikeLeasingApplication>(*args)
+    runApplication<OperatonBikeLeasingApplication>(*args)
 }

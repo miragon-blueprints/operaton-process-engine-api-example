@@ -1,6 +1,6 @@
 -- Baseline schema for the bike-leasing application.
 -- Matches the JPA entities in adapter/outbound/db so Hibernate `ddl-auto: validate` passes.
--- Flyway owns these tables; the CIB seven engine manages its own ACT_* tables separately.
+-- Flyway owns these tables; the Operaton engine manages its own ACT_* tables separately.
 
 CREATE TABLE bike_portfolio (
     bike_id VARCHAR(255) NOT NULL,

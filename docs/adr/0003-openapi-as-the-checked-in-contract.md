@@ -49,15 +49,15 @@ every API change shows up as a reviewable diff in the PR that makes it.
 
 ## Implementation notes
 
-Two things bite when this runs on the embedded CIB seven engine:
+Two things bite when this runs on the embedded Operaton engine:
 
-- **Swagger UI vs. the CIB seven webclient.** The webapp registers its own resource handlers *and* its
+- **Swagger UI vs. the Operaton webapps.** The webapp registers its own resource handlers *and* its
   own `OpenAPI` bean. `OpenApiConfiguration`'s bean is marked `@Primary` so springdoc serves ours for
-  `/api/**`, and `/camunda`, `/swagger-ui.html` and `/v3/api-docs` coexist (verified at build time). If
+  `/api/**`, and `/operaton`, `/swagger-ui.html` and `/v3/api-docs` coexist (verified at build time). If
   a future upgrade breaks that, swap to `springdoc-openapi-starter-webmvc-api` (spec only, no UI) — a
   consumer only needs `/v3/api-docs`.
 - **Jackson 3 date-time.** Spring Boot 4 ships Jackson 3, which defaults `WRITE_DATES_AS_TIMESTAMPS` on,
-  and the webclient serves `/api` with its own mapper that ignores global config. springdoc types the
+  and the Operaton webapp serves its own endpoints with a mapper that ignores global config. springdoc types the
   fields as `string/date-time`, so DTO date fields are pinned with `@JsonFormat(shape = STRING)` to keep
   payload and contract in sync. Operation ids are set explicitly (`@Operation(operationId = …)`) so the
   generated method names stay clean and stable (e.g. `listLeasingApplications`).

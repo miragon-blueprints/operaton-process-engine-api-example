@@ -6,10 +6,10 @@
 ## Context
 
 The stack sits on the newest major of nearly everything at once — Spring Boot 4 and Kotlin 2.x on the
-CIB seven Spring-Boot-4 line. That is a real choice with a real cost: newest majors have smaller
-ecosystems, more breaking-change churn, and occasionally force an integration workaround (e.g.
-excluding the non-SB4 CIB seven webclient so the app starts on Spring 7). A fork left untouched for
-months may need an upgrade pass before it builds again.
+Operaton Spring-Boot-4 line. That is a real choice with a real cost: newest majors have smaller
+ecosystems, more breaking-change churn, and occasionally a version skew to absorb (e.g. the app runs on
+Spring Boot 4.1.0 while Operaton 2.1.x is tested against the Spring Boot 4.0.x line — same major line, a
+minor ahead). A fork left untouched for months may need an upgrade pass before it builds again.
 
 Left unwritten, this is indistinguishable from *drift* — a reader can't tell whether being on the bleeding
 edge is a stance or an accident. This ADR makes it a stance.

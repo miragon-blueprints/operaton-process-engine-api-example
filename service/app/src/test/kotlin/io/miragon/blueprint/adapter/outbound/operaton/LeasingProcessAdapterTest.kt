@@ -1,4 +1,4 @@
-package io.miragon.blueprint.adapter.outbound.cibseven
+package io.miragon.blueprint.adapter.outbound.operaton
 
 import dev.bpmcrafters.processengineapi.CommonRestrictions
 import dev.bpmcrafters.processengineapi.Empty

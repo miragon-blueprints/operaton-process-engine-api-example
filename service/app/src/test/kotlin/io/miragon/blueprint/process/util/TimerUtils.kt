@@ -1,7 +1,7 @@
 package io.miragon.blueprint.process.util
 
 import io.miragon.bpmn.runtime.ElementId
-import org.cibseven.bpm.engine.ProcessEngine
+import org.operaton.bpm.engine.ProcessEngine
 
 /**
  * Fires the timer job of the given boundary/catch event directly, regardless of its due date.

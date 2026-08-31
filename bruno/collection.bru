@@ -38,7 +38,7 @@ script:pre-request {
       predicate, opts);
   };
 
-  // GET {{engineRest}}{path} (CIB seven engine REST) until predicate(data, status) holds.
+  // GET {{engineRest}}{path} (Operaton engine REST) until predicate(data, status) holds.
   globalThis.pollEngine = function (path, predicate, opts) {
     return globalThis.pollUntil(
       { method: 'get', url: bru.getEnvVar('engineRest') + path },

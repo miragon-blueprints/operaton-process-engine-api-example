@@ -35,7 +35,7 @@ class GetLeasingApplicationController(
         val status: String,
         val orderId: String?,
         val contractId: String?,
-        // Force ISO-8601 string form: Jackson 3 (SB4) defaults to a numeric array, but the CIB seven
+        // Force ISO-8601 string form: Jackson 3 (SB4) defaults to a numeric array, but the Operaton
         // webapp serves /api with its own Jackson mapper that ignores our global date-time config, so
         // the format is pinned at the field to keep the payload in sync with the springdoc contract
         // any API consumer relies on.

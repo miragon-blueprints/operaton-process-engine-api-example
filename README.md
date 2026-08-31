@@ -1,4 +1,4 @@
-# CIB seven Bike-Leasing Blueprint
+# Operaton Bike-Leasing Blueprint
 
 > [!NOTE]
 > **🚧 Work in progress.** This is a **solution template** — a reference to fork and build on, for
@@ -7,12 +7,12 @@
 > living example, and expect it to keep evolving.
 
 A ready-to-fork **starting point** for automating a business process on
-[CIB seven](https://cibseven.org) (the community fork of Camunda 7) with an **embedded engine**,
+[Operaton](https://operaton.org) (the community fork of Camunda 7) with an **embedded engine**,
 Spring Boot and Kotlin — one complete, runnable, production-shaped BPMN service you can clone and make
 your own.
 
 This variant talks to the engine through the [**process-engine-api**](https://github.com/bpm-crafters)
-(bpm-crafters) abstraction instead of the plain CIB seven APIs: the BPMN service tasks are external
+(bpm-crafters) abstraction instead of the plain Operaton APIs: the BPMN service tasks are external
 tasks consumed by `@ProcessEngineWorker` beans, and starting instances / correlating messages /
 completing user tasks all go through the process-engine-api. The engine is still embedded, so
 Cockpit/Tasklist and the `/engine-rest` API remain available.
@@ -49,10 +49,10 @@ them — so a new project starts from something complete instead of a blank page
 ```
 service/
   common-architecture-tests/   reusable ArchUnit + Konsist rule suite (src/main)
-  app/                         the CIB seven bike-leasing service (hexagonal)
+  app/                         the Operaton bike-leasing service (hexagonal)
     adapter/inbound/rest        domain REST controllers
-    adapter/inbound/cibseven    process-engine-api workers for the BPMN service tasks
-    adapter/outbound/cibseven   drives the engine through the process-engine-api
+    adapter/inbound/operaton    process-engine-api workers for the BPMN service tasks
+    adapter/outbound/operaton   drives the engine through the process-engine-api
     adapter/outbound/db         JPA persistence (leasing applications + bike portfolio)
     adapter/outbound/dealer     simulated bike dealer (stock check + order)
     adapter/process             generated *ProcessApi (bpmn-to-code) + engine config
@@ -68,12 +68,12 @@ docs/{README.md, adr/, assets/} ADR index + records + the process diagram
 .github/                       pre-merge pipeline + Dependabot
 ```
 
-- **Stack:** Kotlin 2.4 · Spring Boot 4 · CIB seven 2.2 (embedded) · process-engine-api (bpm-crafters) · PostgreSQL · Gradle with a
+- **Stack:** Kotlin 2.4 · Spring Boot 4 · Operaton 2.1 (embedded) · process-engine-api (bpm-crafters) · PostgreSQL · Gradle with a
   `libs.versions.toml` version catalog.
 - **Generated process API:** the [`bpmn-to-code`](https://github.com/emaarco/bpmn-to-code) Gradle
   plugin turns each `.bpmn` into a typed `*ProcessApi` object, so element ids, messages, timers and
   variables are compile-checked constants used by both delegates and tests.
-- **Forms:** Camunda Forms (`.form`) are deployed with the process and render in the CIB seven
+- **Forms:** Camunda Forms (`.form`) are deployed with the process and render in the Operaton
   Tasklist/Cockpit for the user tasks.
 - **BPMN linting:** [`bpmnlint`](https://github.com/bpmn-io/bpmnlint) (`bpmnlint:recommended` plus
   the camunda-platform-7 and `@miragon/rules` plugins) gates the `.bpmn` models. The tooling lives at
@@ -88,7 +88,7 @@ docs/{README.md, adr/, assets/} ADR index + records + the process diagram
 ## Design decisions
 
 - **Hexagonal architecture** keeps the engine and framework at the edges: the domain and use cases
-  never depend on CIB seven, so business logic is testable and the engine is replaceable. The
+  never depend on Operaton, so business logic is testable and the engine is replaceable. The
   `:service:common-architecture-tests` module enforces this with **ArchUnit** (bytecode: layering,
   dependency direction, naming) and **Konsist** (source: one declaration per file, no wildcard
   imports) — one line wires it into a service: `class ArchitectureTest : ServiceArchitectureTest(...)`.
@@ -97,19 +97,19 @@ docs/{README.md, adr/, assets/} ADR index + records + the process diagram
   `@WebMvcTest`, persistence via `@DataJpaTest`. The workers are covered by the process tests.
 - **Mutation testing** (`pitest`) gates PRs at a score of **80**: coverage says a line ran, mutation
   says a test would have noticed. It runs diff-scoped on PRs and a full-module sweep nightly.
-- **Process tests** (`cibseven-bpm-assert`) drive the deployed model — timers and async continuations
+- **Process tests** (`operaton-bpm-assert`) drive the deployed model — timers and async continuations
   are fired and messages correlated by hand, while the real `@ProcessEngineWorker` beans consume the
   external service tasks — covering happy-path, escalation, abort, DMN rejection, and the
   bike-unavailable → alternative-selection loop.
 - **Model validation** (`bpmn-to-code-testing`) checks the `.bpmn` models structurally at build time
   (`BpmnRules.all()` plus a custom rule requiring every service task to be an external task with a topic).
 - **Bruno + CI** proves the same scenarios against the *running* app: domain REST endpoints drive the
-  business actions, and the CIB seven `/engine-rest` API completes user tasks and fires timer jobs so
+  business actions, and the Operaton `/engine-rest` API completes user tasks and fires timer jobs so
   the whole flow runs in the pipeline without real 14-day waits.
 - **Dependabot** keeps Gradle, the Postgres image and GitHub Actions current.
 
 Every non-obvious decision is recorded as an **Architecture Decision Record** — start at the
-[docs index](docs/README.md) and its [ADRs](docs/adr/) (0001–0011) to read the *why* before changing
+[docs index](docs/README.md) and its [ADRs](docs/adr/) (0001–0013) to read the *why* before changing
 the *what*.
 
 ## Run it
@@ -118,7 +118,7 @@ the *what*.
 # 1. start Postgres
 docker compose -f stack/docker-compose.yml up -d
 
-# 2. run the app (CIB seven Cockpit/Tasklist at http://localhost:8080/camunda, admin/admin)
+# 2. run the app (Operaton Cockpit/Tasklist at http://localhost:8080/operaton, admin/admin)
 ./gradlew :service:app:bootRun
 
 # 3. lint the BPMN models (tooling lives at the repo root)
@@ -130,7 +130,7 @@ cd bruno && npx --yes @usebruno/cli@4.0.0 run . --env local -r
 ```
 
 Prefer containers? `./gradlew :service:app:bootBuildImage` builds an OCI image
-(`cibseven-process-engine-api-example/app:…`) with Spring's buildpacks — no Dockerfile — to run
+(`operaton-process-engine-api-example/app:…`) with Spring's buildpacks — no Dockerfile — to run
 against the Postgres dev stack. See [CONTRIBUTING.md](CONTRIBUTING.md) for the details.
 
 Start a case with `POST http://localhost:8080/api/bike-leasing`

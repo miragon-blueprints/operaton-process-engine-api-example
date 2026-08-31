@@ -22,7 +22,7 @@ is a **headless** service with no bundled UI, the only artifact to ship is that 
 We produce an **OCI image for the backend with Spring's `bootBuildImage`** (buildpacks, no Dockerfile).
 
 - **Backend image** — `./gradlew :service:app:bootBuildImage` builds
-  `cibseven-process-engine-api-example/app:<version>` (`bootBuildImage.imageName` in
+  `operaton-process-engine-api-example/app:<version>` (`bootBuildImage.imageName` in
   `service/app/build.gradle.kts`, JVM pinned via `BP_JVM_VERSION=21`). Buildpacks give a layered,
   non-root image with no Dockerfile to maintain. A hand-written Dockerfile would only be justified if we
   needed control buildpacks can't give; we don't.
@@ -43,7 +43,7 @@ The how-to (build the image, the podman socket note, run it) is in
   The build & deployment dimension is now filled for a headless service.
 - **Negative / trade-offs:** with **podman** the buildpack step needs a Docker-API socket
   (`podman system service` + `DOCKER_HOST`). The image is **not production-hardened** — it carries the
-  dev `jwtSecret` and admin/admin credentials from `application.yaml`, which a real deployment must
+  dev admin/admin credentials from `application.yaml`, which a real deployment must
   override.
 - **Neutral:** a CI job that builds the image or validates the compose is a natural follow-up, deferred
   for now.

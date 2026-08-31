@@ -9,7 +9,7 @@ The backend shipped no operational endpoints: no health check for an orchestrato
 metrics for monitoring to scrape. A greenfield template that aims to be "production-shaped" should be
 deploy- and ops-ready out of the box. Spring Boot makes this cheap — `spring-boot-starter-actuator`
 plus a Micrometer registry — so the cost/benefit is clearly in favour. The open question was only
-*how much* to expose, and whether the embedded CIB seven engine needs its own health contributor.
+*how much* to expose, and whether the embedded Operaton engine needs its own health contributor.
 
 ## Decision
 

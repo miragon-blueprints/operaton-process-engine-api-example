@@ -3,8 +3,8 @@ package io.miragon.blueprint.process.util
 import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.PROCESS_ID
 import io.miragon.blueprint.domain.leasing.ApplicationId
 import org.assertj.core.api.Assertions.assertThat
-import org.cibseven.bpm.engine.RuntimeService
-import org.cibseven.bpm.engine.runtime.ProcessInstance
+import org.operaton.bpm.engine.RuntimeService
+import org.operaton.bpm.engine.runtime.ProcessInstance
 
 /**
  * Finds the bike-leasing process instance for the given application id (used as the business key).

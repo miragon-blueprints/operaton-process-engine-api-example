@@ -1,6 +1,6 @@
 package io.miragon.blueprint.process.util
 
-import org.cibseven.bpm.engine.ProcessEngine
+import org.operaton.bpm.engine.ProcessEngine
 
 /**
  * Drives the process to its next wait state. Necessary because the job executor is disabled in tests

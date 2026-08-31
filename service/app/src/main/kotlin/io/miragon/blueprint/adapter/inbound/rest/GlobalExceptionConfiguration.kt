@@ -1,7 +1,7 @@
 package io.miragon.blueprint.adapter.inbound.rest
 
 import mu.KotlinLogging
-import org.cibseven.bpm.engine.MismatchingMessageCorrelationException
+import org.operaton.bpm.engine.MismatchingMessageCorrelationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.ExceptionHandler
