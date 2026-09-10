@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.miragon.blueprint</groupId>
+        <artifactId>operaton-process-engine-api-example</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>app</artifactId>
+    <name>app</name>
+    <description>MiraVelo bike-leasing backend — Spring Boot with the embedded Operaton engine</description>
+
+    <properties>
+        <!-- Overridden by CI's diff-scoped mutation run via -DmutationTargetClasses="a.B*,c.D*". -->
+        <mutationTargetClasses>io.miragon.blueprint.*</mutationTargetClasses>
+        <!-- GitHub-runner vCPUs; override locally with -Dpit.threads=N. -->
+        <pit.threads>4</pit.threads>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Nullability annotations (JSpecify) used across the domain and ports. -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+
+        <!-- Persistence -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- The explicit JDBC starter documents the engine's DataSource requirement. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- Process engine: embedded Operaton driven through the process-engine-api abstraction. -->
+        <dependency>
+            <groupId>org.operaton.bpm.springboot</groupId>
+            <artifactId>operaton-bpm-spring-boot-starter-webapp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.operaton.bpm.springboot</groupId>
+            <artifactId>operaton-bpm-spring-boot-starter-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.bpm-crafters.process-engine-api</groupId>
+            <artifactId>process-engine-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.bpm-crafters.process-engine-adapters</groupId>
+            <artifactId>process-engine-adapter-operaton-embedded-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.bpm-crafters.process-engine-worker</groupId>
+            <artifactId>process-engine-worker-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.miragon</groupId>
+            <artifactId>bpmn-to-code-runtime</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.operaton.bpm</groupId>
+            <artifactId>operaton-bpm-assert</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.operaton.bpm</groupId>
+            <artifactId>operaton-bpm-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.miragon</groupId>
+            <artifactId>bpmn-to-code-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.miragon.blueprint</groupId>
+            <artifactId>common-architecture-tests</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Regenerates the committed typed *ProcessApi from the BPMN models on every build, so
+                 the compiled constants can never go stale relative to the models. The models use the
+                 shared Camunda-7 `camunda:` namespace, which Operaton reads natively (Operaton is
+                 fully backward-compatible with Camunda 7 BPMN/DMN). bpmn-to-code's OPERATON target
+                 instead expects `operaton:`-namespaced models, so generation stays on CAMUNDA_7 —
+                 the generated constants are engine-agnostic BPMN strings either way. See ADR-0013. -->
+            <plugin>
+                <groupId>io.miragon</groupId>
+                <artifactId>bpmn-to-code-maven</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-bpmn-api</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate-bpmn-api</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <baseDir>${project.basedir}</baseDir>
+                    <filePattern>src/main/resources/bpmn/*.bpmn</filePattern>
+                    <outputFolderPath>${project.basedir}/src/main/java</outputFolderPath>
+                    <packagePath>io.miragon.blueprint.adapter.process</packagePath>
+                    <outputLanguage>JAVA</outputLanguage>
+                    <processEngine>CAMUNDA_7</processEngine>
+                </configuration>
+            </plugin>
+
+            <!-- Declaring the plugin activates the parent-managed `repackage` execution (fat jar).
+                 The OCI image for the backend is built by Spring's Cloud Native Buildpacks
+                 integration — no Dockerfile to maintain (layered, non-root by default). See
+                 docs/adr/0011 and the "Run it in containers" section of CONTRIBUTING.md. Build with
+                 `./mvnw -pl service/app spring-boot:build-image`. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <image>
+                        <name>operaton-process-engine-api-example/app:${project.version}</name>
+                        <env>
+                            <!-- Pin the JVM the buildpack installs to the version the code targets. -->
+                            <BP_JVM_VERSION>21</BP_JVM_VERSION>
+                        </env>
+                    </image>
+                </configuration>
+            </plugin>
+
+            <!-- A fresh JVM per test class: the embedded engine and the Spring contexts of the
+                 process tests must not leak between classes (the Gradle build used forkEvery = 1). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
+
+            <!-- Mutation testing (gate 80) — see docs/adr/0004. CI runs this diff-scoped per PR via
+                 -DmutationTargetClasses and as a full nightly sweep. -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <targetClasses>${mutationTargetClasses}</targetClasses>
+                    <targetTests>io.miragon.blueprint.*</targetTests>
+                    <failWhenNoMutations>false</failWhenNoMutations>
+                    <excludedClasses>
+                        <param>io.miragon.blueprint.adapter.process.*ProcessApi*</param>
+                        <param>io.miragon.blueprint.adapter.process.HistoryCleanupConfiguration*</param>
+                        <param>io.miragon.blueprint.adapter.process.EngineApiConfiguration*</param>
+                        <param>io.miragon.blueprint.OperatonBikeLeasingApplication*</param>
+                        <param>io.miragon.blueprint.BikeCatalogueSeeder*</param>
+                        <param>io.miragon.blueprint.adapter.inbound.rest.DevCorsConfiguration*</param>
+                        <param>io.miragon.blueprint.adapter.inbound.rest.OpenApiConfiguration*</param>
+                        <!-- External-task worker beans are thin @ProcessEngineWorker adapters exercised by the
+                             process tests, which mutation testing excludes. -->
+                        <param>io.miragon.blueprint.adapter.inbound.operaton.*</param>
+                    </excludedClasses>
+                    <excludedTestClasses>
+                        <param>io.miragon.blueprint.process.*</param>
+                        <param>io.miragon.blueprint.architecture.*</param>
+                    </excludedTestClasses>
+                    <threads>${pit.threads}</threads>
+                    <timeoutFactor>2.0</timeoutFactor>
+                    <avoidCallsTo>
+                        <avoidCallsTo>org.slf4j</avoidCallsTo>
+                    </avoidCallsTo>
+                    <mutators>
+                        <mutator>DEFAULTS</mutator>
+                    </mutators>
+                    <outputFormats>
+                        <param>HTML</param>
+                        <param>XML</param>
+                    </outputFormats>
+                    <timestampedReports>false</timestampedReports>
+                    <mutationThreshold>80</mutationThreshold>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -9,8 +9,10 @@ multi-ecosystem-groups:
 
 updates:
 
-  # Backend dependencies (Gradle + the Postgres image in the dev stack) grouped into one PR
-  - package-ecosystem: "gradle"
+  # Backend dependencies (Maven + the Postgres image in the dev stack) grouped into one PR.
+  # Note: unlike the gradle ecosystem, Dependabot does not bump the Maven wrapper — update
+  # .mvn/wrapper/maven-wrapper.properties manually when a new Maven 3.9.x lands.
+  - package-ecosystem: "maven"
     directory: "/"
     patterns:
       - "*"

@@ -24,7 +24,7 @@ We use **[Flyway](https://flywaydb.org/)** as the owner of the application schem
 to **`ddl-auto: validate`** — Hibernate now only checks that the mapped entities match the migrated
 schema and never creates or drops a table.
 
-- **Dependencies** (`gradle/libs.versions.toml`, `database` bundle):
+- **Dependencies** (managed in the root `pom.xml`):
   **`spring-boot-starter-flyway`** + `flyway-database-postgresql`. The starter is required, not raw
   `flyway-core`: Spring Boot 4 modularised the Flyway autoconfiguration out of
   `spring-boot-autoconfigure`, so `flyway-core` alone puts Flyway on the classpath but never wires it

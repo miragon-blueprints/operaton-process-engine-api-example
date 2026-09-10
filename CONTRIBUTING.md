@@ -18,7 +18,8 @@ Run the app locally:
 
 ```bash
 docker compose -f stack/docker-compose.yml up -d   # Postgres
-./gradlew :service:app:bootRun                      # backend + embedded engine on :8080
+./mvnw -DskipTests install                         # once on a fresh clone — installs the arch-tests jar into the local repo
+./mvnw -pl service/app spring-boot:run             # backend + embedded engine on :8080
 ```
 
 ### Ports
@@ -57,18 +58,18 @@ is in [ADR-0011](docs/adr/0011-build-and-deployment-approach.md).
 
 ```bash
 # 1. build the OCI image (Spring buildpacks — no Dockerfile). Produces operaton-process-engine-api-example/app:1.0-SNAPSHOT
-./gradlew :service:app:bootBuildImage
+./mvnw -DskipTests install && ./mvnw -pl service/app spring-boot:build-image -DskipTests
 
 # 2. bring up Postgres
 docker compose -f stack/docker-compose.yml up -d
 ```
 
-**Podman:** `bootBuildImage` needs a Docker-API socket. Expose podman's and point the build at it:
+**Podman:** `spring-boot:build-image` needs a Docker-API socket. Expose podman's and point the build at it:
 
 ```bash
 podman system service --time=0 unix:///tmp/podman.sock &
 export DOCKER_HOST=unix:///tmp/podman.sock
-./gradlew :service:app:bootBuildImage
+./mvnw -DskipTests install && ./mvnw -pl service/app spring-boot:build-image -DskipTests
 ```
 
 **Configuration.** `application.yaml` ships dev defaults; the deploy-relevant values are read from the
@@ -89,9 +90,12 @@ environment (they win over the baked defaults):
 
 ```bash
 # backend
-./gradlew build                         # arch + unit + process + model validation + spec export
-./gradlew :service:app:pitest           # mutation score >= 80
-./gradlew generateBpmnModels            # regenerate the typed process API after editing a .bpmn
+./mvnw verify                           # arch + unit + process + model validation + spec export
+./mvnw -DskipTests install && \
+  ./mvnw -pl service/app org.pitest:pitest-maven:mutationCoverage
+                                        # mutation score >= 80 (report: service/app/target/pit-reports)
+./mvnw -pl service/app generate-sources # regenerate the typed process API after editing a .bpmn
+                                        # (also runs automatically on every build)
 
 # BPMN (tooling at repo root)
 npm ci && npm run lint:bpmn             # bpmnlint the .bpmn models
@@ -107,15 +111,16 @@ npm ci && npm run lint:bpmn             # bpmnlint the .bpmn models
 - **Conventional Commits.** Commit messages and PR titles follow
   [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`,
   `refactor:`, `test:`, `chore:`). Write everything in **English**.
-- **Keep the gates green.** The architecture (ArchUnit + Konsist), contract-drift and mutation (≥ 80)
+- **Keep the gates green.** The architecture (ArchUnit + Checkstyle), contract-drift and mutation (≥ 80)
   gates run in CI on every PR. They are fitness functions, not style guides — a violation fails the
   build. The mutation gate is **diff-scoped** on PRs (only the classes you changed); the full-module
   gate-80 sweep runs nightly.
 - **Add tests.** This is a TDD codebase; match the test style to the layer (see `AGENTS.md`).
   Mutation testing means a test that runs without asserting will fail CI.
 - **Changing the API?** Regenerate and commit `openapi/openapi.json` in the same change so the drift
-  gate stays green. Service tasks are external-topic `@ProcessEngineWorker` beans — never introduce an
-  embedded delegate.
+  gate stays green. Regenerate on **JDK 21** (Temurin — the CI toolchain): other JDK majors have been
+  observed to alter the exported spec. Service tasks are external-topic `@ProcessEngineWorker` beans —
+  never introduce an embedded delegate.
 - **Changing the database schema?** Flyway owns it. Add a new forward-only migration
   `V{n}__description.sql` under `service/app/src/main/resources/db/migration/` in the same change as
   the entity edit — never edit an already-applied migration. Hibernate runs `validate`, so a mismatch
@@ -126,9 +131,10 @@ npm ci && npm run lint:bpmn             # bpmnlint the .bpmn models
 ## Before opening a PR
 
 ```bash
-./gradlew build
+./mvnw verify
 git diff --exit-code openapi/openapi.json    # the API contract must not drift
-./gradlew :service:app:pitest                # mutation score >= 80
+./mvnw -DskipTests install && \
+  ./mvnw -pl service/app org.pitest:pitest-maven:mutationCoverage   # mutation score >= 80
 npm ci && npm run lint:bpmn                   # the BPMN models lint clean
 ```
 

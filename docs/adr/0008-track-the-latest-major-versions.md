@@ -5,7 +5,7 @@
 
 ## Context
 
-The stack sits on the newest major of nearly everything at once — Spring Boot 4 and Kotlin 2.x on the
+The stack sits on the newest major of nearly everything at once — Spring Boot 4 and Java 21 on the
 Operaton Spring-Boot-4 line. That is a real choice with a real cost: newest majors have smaller
 ecosystems, more breaking-change churn, and occasionally a version skew to absorb (e.g. the app runs on
 Spring Boot 4.1.0 while Operaton 2.1.x is tested against the Spring Boot 4.0.x line — same major line, a
@@ -39,4 +39,5 @@ documented at the point of use.
   community answers, integration hacks); a long-dormant fork may need an upgrade pass before it builds.
   We accept these as the price of the stance.
 - **Neutral:** "latest **stable** major" — we track releases, not RCs/pre-releases, and the CI gates, not a
-  calendar, decide whether a given bump lands.
+  calendar, decide whether a given bump lands. The same rule keeps the build on the Maven 3.9.x line
+  until Maven 4 is GA.
