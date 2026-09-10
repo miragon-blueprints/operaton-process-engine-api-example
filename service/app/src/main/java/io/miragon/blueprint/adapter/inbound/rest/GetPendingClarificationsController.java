@@ -1,9 +1,11 @@
 package io.miragon.blueprint.adapter.inbound.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.miragon.blueprint.application.port.inbound.GetPendingClarificationsQuery;
 import io.miragon.blueprint.domain.leasing.PendingClarification;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,13 +49,16 @@ public class GetPendingClarificationsController {
         );
     }
 
+    // `required = true` / `nullable = true` mirror the non-null contract Kotlin once carried in its
+    // type system: swagger-core cannot derive them from JSpecify annotations (swagger-api/swagger-core#5001).
     public record PendingClarificationDto(
-        String applicationId,
-        String customerName,
-        String requestedBikeId,
-        @Nullable String requestedBikeModel,
+        @JsonProperty(required = true) String applicationId,
+        @JsonProperty(required = true) String customerName,
+        @JsonProperty(required = true) String requestedBikeId,
+        @Schema(nullable = true) @Nullable String requestedBikeModel,
         // ISO-8601 string — see the note in GetLeasingApplicationController.LeasingApplicationDto.
         @JsonFormat(shape = JsonFormat.Shape.STRING)
+        @JsonProperty(required = true)
         LocalDateTime waitingSince
     ) {
     }

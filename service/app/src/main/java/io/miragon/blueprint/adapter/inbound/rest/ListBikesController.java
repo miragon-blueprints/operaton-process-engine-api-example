@@ -1,5 +1,6 @@
 package io.miragon.blueprint.adapter.inbound.rest;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.miragon.blueprint.application.port.inbound.ListBikesQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,10 +32,12 @@ public class ListBikesController {
             .toList();
     }
 
+    // `required = true` mirrors the non-null contract Kotlin once carried in its type system:
+    // swagger-core cannot derive required/nullable from JSpecify annotations (swagger-api/swagger-core#5001).
     public record BikeDto(
-        String bikeId,
-        String model,
-        boolean available
+        @JsonProperty(required = true) String bikeId,
+        @JsonProperty(required = true) String model,
+        @JsonProperty(required = true) boolean available
     ) {
     }
 }

@@ -1,12 +1,14 @@
 package io.miragon.blueprint.adapter.inbound.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.miragon.blueprint.application.port.inbound.GetLeasingApplicationQuery;
 import io.miragon.blueprint.domain.bike.OrderId;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.ContractId;
 import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
@@ -35,22 +37,25 @@ public class GetLeasingApplicationController {
         return ResponseEntity.ok(toDto(result));
     }
 
+    // `required = true` / `nullable = true` mirror the non-null contract Kotlin once carried in its
+    // type system: swagger-core cannot derive them from JSpecify annotations (swagger-api/swagger-core#5001).
     public record LeasingApplicationDto(
-        String applicationId,
-        String customerName,
-        String email,
-        int age,
-        double monthlyNetIncome,
-        String bikeId,
-        @Nullable String bikeModel,
-        String status,
-        @Nullable String orderId,
-        @Nullable String contractId,
+        @JsonProperty(required = true) String applicationId,
+        @JsonProperty(required = true) String customerName,
+        @JsonProperty(required = true) String email,
+        @JsonProperty(required = true) int age,
+        @JsonProperty(required = true) double monthlyNetIncome,
+        @JsonProperty(required = true) String bikeId,
+        @Schema(nullable = true) @Nullable String bikeModel,
+        @JsonProperty(required = true) String status,
+        @Schema(nullable = true) @Nullable String orderId,
+        @Schema(nullable = true) @Nullable String contractId,
         // Force ISO-8601 string form: Jackson 3 (SB4) defaults to a numeric array, but the Operaton
         // webapp serves /api with its own Jackson mapper that ignores our global date-time config, so
         // the format is pinned at the field to keep the payload in sync with the springdoc contract
         // any API consumer relies on.
         @JsonFormat(shape = JsonFormat.Shape.STRING)
+        @JsonProperty(required = true)
         LocalDateTime createdAt
     ) {
     }

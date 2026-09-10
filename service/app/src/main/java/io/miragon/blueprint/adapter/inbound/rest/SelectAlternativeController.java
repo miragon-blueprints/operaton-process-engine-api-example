@@ -6,6 +6,7 @@ import io.miragon.blueprint.application.port.inbound.SelectAlternativeUseCase;
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,10 +46,13 @@ public class SelectAlternativeController {
         return ResponseEntity.accepted().build();
     }
 
+    // `required = true` / `nullable = true` mirror the non-null contract Kotlin once carried in its type
+    // system: swagger-core cannot derive them from JSpecify annotations (swagger-api/swagger-core#5001).
+    // On this input record, required also restores the Kotlin-era behavior of rejecting a missing field with 400.
     public record AlternativeDecisionInput(
-        @JsonProperty("alternativeFound") boolean alternativeFound,
-        @JsonProperty("bikeId") @Nullable String bikeId,
-        @JsonProperty("bikeModel") @Nullable String bikeModel
+        @JsonProperty(value = "alternativeFound", required = true) boolean alternativeFound,
+        @JsonProperty("bikeId") @Schema(nullable = true) @Nullable String bikeId,
+        @JsonProperty("bikeModel") @Schema(nullable = true) @Nullable String bikeModel
     ) {
 
         @JsonCreator

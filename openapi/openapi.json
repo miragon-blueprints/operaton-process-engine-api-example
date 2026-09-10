@@ -1,56 +1,241 @@
 {
-  "openapi" : "3.1.0",
+  "components" : {
+    "schemas" : {
+      "AlternativeDecisionInput" : {
+        "properties" : {
+          "alternativeFound" : {
+            "type" : "boolean"
+          },
+          "bikeId" : {
+            "type" : [ "string", "null" ]
+          },
+          "bikeModel" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "alternativeFound" ],
+        "type" : "object"
+      },
+      "BikeDto" : {
+        "properties" : {
+          "available" : {
+            "type" : "boolean"
+          },
+          "bikeId" : {
+            "type" : "string"
+          },
+          "model" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "available", "bikeId", "model" ],
+        "type" : "object"
+      },
+      "LeasingApplicationCreatedDto" : {
+        "properties" : {
+          "applicationId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "applicationId" ],
+        "type" : "object"
+      },
+      "LeasingApplicationDto" : {
+        "properties" : {
+          "age" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "applicationId" : {
+            "type" : "string"
+          },
+          "bikeId" : {
+            "type" : "string"
+          },
+          "bikeModel" : {
+            "type" : [ "string", "null" ]
+          },
+          "contractId" : {
+            "type" : [ "string", "null" ]
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "monthlyNetIncome" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "orderId" : {
+            "type" : [ "string", "null" ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "age", "applicationId", "bikeId", "createdAt", "customerName", "email", "monthlyNetIncome", "status" ],
+        "type" : "object"
+      },
+      "LeasingApplicationPageDto" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/LeasingApplicationSummaryDto"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ],
+        "type" : "object"
+      },
+      "LeasingApplicationSummaryDto" : {
+        "properties" : {
+          "applicationId" : {
+            "type" : "string"
+          },
+          "bikeId" : {
+            "type" : "string"
+          },
+          "bikeModel" : {
+            "type" : [ "string", "null" ]
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "applicationId", "bikeId", "createdAt", "customerName", "status" ],
+        "type" : "object"
+      },
+      "LeasingRequestInput" : {
+        "properties" : {
+          "age" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "bikeId" : {
+            "type" : "string"
+          },
+          "bikeModel" : {
+            "type" : "string"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "monthlyNetIncome" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "required" : [ "age", "bikeId", "bikeModel", "customerName", "email", "monthlyNetIncome" ],
+        "type" : "object"
+      },
+      "PendingClarificationDto" : {
+        "properties" : {
+          "applicationId" : {
+            "type" : "string"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "requestedBikeId" : {
+            "type" : "string"
+          },
+          "requestedBikeModel" : {
+            "type" : [ "string", "null" ]
+          },
+          "waitingSince" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "required" : [ "applicationId", "customerName", "requestedBikeId", "waitingSince" ],
+        "type" : "object"
+      }
+    }
+  },
   "info" : {
-    "title" : "MiraVelo Bike-Leasing API",
     "description" : "Customer-portal and back-office endpoints for the MiraVelo bike-leasing process. The engine-internal /engine-rest API is intentionally excluded.",
+    "title" : "MiraVelo Bike-Leasing API",
     "version" : "1.0"
   },
+  "openapi" : "3.1.0",
   "paths" : {
     "/api/bike-leasing" : {
       "get" : {
-        "tags" : [ "list-leasing-applications-controller" ],
         "operationId" : "listLeasingApplications",
         "parameters" : [ {
-          "name" : "status",
           "in" : "query",
+          "name" : "status",
           "required" : false,
           "schema" : {
             "type" : "string"
           }
         }, {
-          "name" : "page",
           "in" : "query",
+          "name" : "page",
           "required" : false,
           "schema" : {
-            "type" : "integer",
+            "default" : 0,
             "format" : "int32",
-            "default" : 0
+            "type" : "integer"
           }
         }, {
-          "name" : "size",
           "in" : "query",
+          "name" : "size",
           "required" : false,
           "schema" : {
-            "type" : "integer",
+            "default" : 20,
             "format" : "int32",
-            "default" : 20
+            "type" : "integer"
           }
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/LeasingApplicationPageDto"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "list-leasing-applications-controller" ]
       },
       "post" : {
-        "tags" : [ "submit-leasing-request-controller" ],
         "operationId" : "submitLeasingRequest",
         "requestBody" : {
           "content" : {
@@ -64,25 +249,25 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/LeasingApplicationCreatedDto"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "submit-leasing-request-controller" ]
       }
     },
-    "/api/bike-leasing/{applicationId}/withdraw" : {
-      "post" : {
-        "tags" : [ "withdraw-application-controller" ],
-        "operationId" : "withdrawApplication",
+    "/api/bike-leasing/{applicationId}" : {
+      "get" : {
+        "operationId" : "getLeasingApplication",
         "parameters" : [ {
-          "name" : "applicationId",
           "in" : "path",
+          "name" : "applicationId",
           "required" : true,
           "schema" : {
             "type" : "string"
@@ -90,59 +275,25 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
-            "content" : { }
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeasingApplicationDto"
+                }
+              }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/bike-leasing/{applicationId}/sign-contract" : {
-      "post" : {
-        "tags" : [ "sign-contract-controller" ],
-        "operationId" : "signContract",
-        "parameters" : [ {
-          "name" : "applicationId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : { }
-          }
-        }
-      }
-    },
-    "/api/bike-leasing/{applicationId}/report-handover" : {
-      "post" : {
-        "tags" : [ "report-handover-controller" ],
-        "operationId" : "reportHandover",
-        "parameters" : [ {
-          "name" : "applicationId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : { }
-          }
-        }
+        },
+        "tags" : [ "get-leasing-application-controller" ]
       }
     },
     "/api/bike-leasing/{applicationId}/clarify-alternative" : {
       "post" : {
-        "tags" : [ "select-alternative-controller" ],
         "operationId" : "selectAlternative",
         "parameters" : [ {
-          "name" : "applicationId",
           "in" : "path",
+          "name" : "applicationId",
           "required" : true,
           "schema" : {
             "type" : "string"
@@ -160,61 +311,18 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK",
-            "content" : { }
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "select-alternative-controller" ]
       }
     },
-    "/api/tasks/clarify-alternative" : {
-      "get" : {
-        "tags" : [ "get-pending-clarifications-controller" ],
-        "operationId" : "listPendingClarifications",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/PendingClarificationDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bikes" : {
-      "get" : {
-        "tags" : [ "list-bikes-controller" ],
-        "operationId" : "listBikes",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/BikeDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bike-leasing/{applicationId}" : {
-      "get" : {
-        "tags" : [ "get-leasing-application-controller" ],
-        "operationId" : "getLeasingApplication",
+    "/api/bike-leasing/{applicationId}/report-handover" : {
+      "post" : {
+        "operationId" : "reportHandover",
         "parameters" : [ {
-          "name" : "applicationId",
           "in" : "path",
+          "name" : "applicationId",
           "required" : true,
           "schema" : {
             "type" : "string"
@@ -222,202 +330,90 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "report-handover-controller" ]
+      }
+    },
+    "/api/bike-leasing/{applicationId}/sign-contract" : {
+      "post" : {
+        "operationId" : "signContract",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "applicationId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "sign-contract-controller" ]
+      }
+    },
+    "/api/bike-leasing/{applicationId}/withdraw" : {
+      "post" : {
+        "operationId" : "withdrawApplication",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "applicationId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "withdraw-application-controller" ]
+      }
+    },
+    "/api/bikes" : {
+      "get" : {
+        "operationId" : "listBikes",
+        "responses" : {
+          "200" : {
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/LeasingApplicationDto"
+                  "items" : {
+                    "$ref" : "#/components/schemas/BikeDto"
+                  },
+                  "type" : "array"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "list-bikes-controller" ]
       }
-    }
-  },
-  "components" : {
-    "schemas" : {
-      "AlternativeDecisionInput" : {
-        "type" : "object",
-        "properties" : {
-          "alternativeFound" : {
-            "type" : "boolean"
-          },
-          "bikeId" : {
-            "type" : [ "string", "null" ]
-          },
-          "bikeModel" : {
-            "type" : [ "string", "null" ]
+    },
+    "/api/tasks/clarify-alternative" : {
+      "get" : {
+        "operationId" : "listPendingClarifications",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingClarificationDto"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
-        "required" : [ "alternativeFound" ]
-      },
-      "BikeDto" : {
-        "type" : "object",
-        "properties" : {
-          "bikeId" : {
-            "type" : "string"
-          },
-          "model" : {
-            "type" : "string"
-          },
-          "available" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "available", "bikeId", "model" ]
-      },
-      "LeasingApplicationCreatedDto" : {
-        "type" : "object",
-        "properties" : {
-          "applicationId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "applicationId" ]
-      },
-      "LeasingApplicationDto" : {
-        "type" : "object",
-        "properties" : {
-          "applicationId" : {
-            "type" : "string"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "email" : {
-            "type" : "string"
-          },
-          "age" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "monthlyNetIncome" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "bikeId" : {
-            "type" : "string"
-          },
-          "bikeModel" : {
-            "type" : [ "string", "null" ]
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "orderId" : {
-            "type" : [ "string", "null" ]
-          },
-          "contractId" : {
-            "type" : [ "string", "null" ]
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [ "age", "applicationId", "bikeId", "createdAt", "customerName", "email", "monthlyNetIncome", "status" ]
-      },
-      "LeasingApplicationPageDto" : {
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LeasingApplicationSummaryDto"
-            }
-          },
-          "page" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
-      },
-      "LeasingApplicationSummaryDto" : {
-        "type" : "object",
-        "properties" : {
-          "applicationId" : {
-            "type" : "string"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "bikeId" : {
-            "type" : "string"
-          },
-          "bikeModel" : {
-            "type" : [ "string", "null" ]
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [ "applicationId", "bikeId", "createdAt", "customerName", "status" ]
-      },
-      "LeasingRequestInput" : {
-        "type" : "object",
-        "properties" : {
-          "customerName" : {
-            "type" : "string"
-          },
-          "email" : {
-            "type" : "string"
-          },
-          "age" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "monthlyNetIncome" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "bikeId" : {
-            "type" : "string"
-          },
-          "bikeModel" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "age", "bikeId", "bikeModel", "customerName", "email", "monthlyNetIncome" ]
-      },
-      "PendingClarificationDto" : {
-        "type" : "object",
-        "properties" : {
-          "applicationId" : {
-            "type" : "string"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "requestedBikeId" : {
-            "type" : "string"
-          },
-          "requestedBikeModel" : {
-            "type" : [ "string", "null" ]
-          },
-          "waitingSince" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [ "applicationId", "customerName", "requestedBikeId", "waitingSince" ]
+        "tags" : [ "get-pending-clarifications-controller" ]
       }
     }
   }

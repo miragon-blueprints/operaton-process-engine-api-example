@@ -61,13 +61,4 @@ public abstract class ServiceArchitectureTest {
             super(rootPackage);
         }
     }
-
-    // Transitional: guards the remaining Kotlin sources while the Java port is in progress.
-    // Removed (together with Konsist) in the Maven cutover — see ADR-0014.
-    @Nested
-    public class KotlinSource extends KotlinSourceGuidelinesTest {
-        public KotlinSource() {
-            super(rootPackage);
-        }
-    }
 }

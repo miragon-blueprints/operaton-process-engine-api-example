@@ -18,17 +18,18 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: Build the reactor (skip tests)
+        run: ./mvnw -B -ntp -DskipTests install
 
       - name: Run PIT mutation testing
-        run: ./gradlew :service:app:pitest --no-daemon
+        run: ./mvnw -B -ntp -pl service/app org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: pitest-report
-          path: service/app/build/reports/pitest
+          path: service/app/target/pit-reports
           if-no-files-found: warn

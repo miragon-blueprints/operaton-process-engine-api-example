@@ -139,9 +139,6 @@ public abstract class NamingConventionArchitectureTest {
                 .areTopLevelClasses()
                 .and()
                 .areNotAnonymousClasses()
-                // Transitional filter for Kotlin file-facade classes; removed in the Maven cutover.
-                .and()
-                .haveSimpleNameNotEndingWith("Kt")
                 .and()
                 .haveSimpleNameNotEndingWith("_")
                 .and()

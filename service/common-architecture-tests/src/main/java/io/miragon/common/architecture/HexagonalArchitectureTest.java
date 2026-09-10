@@ -32,10 +32,6 @@ public abstract class HexagonalArchitectureTest {
         "..domain..",
         "java..",
         "org.jspecify..",
-        // Transitional entries for the remaining Kotlin sources; removed in the Maven cutover.
-        "kotlin..",
-        "kotlinx..",
-        "org.jetbrains..",
         "", // allows the usage of primitive types
     };
 
@@ -48,12 +44,6 @@ public abstract class HexagonalArchitectureTest {
         "org.slf4j..",
         "org.springframework..",
         "com.fasterxml.jackson..",
-        // Transitional entries for the remaining Kotlin sources; removed in the Maven cutover.
-        "kotlin..",
-        "kotlinx..",
-        "org.jetbrains..",
-        "mu..",
-        "io.github.microutils..",
         "", // allows the usage of primitive types
     };
 

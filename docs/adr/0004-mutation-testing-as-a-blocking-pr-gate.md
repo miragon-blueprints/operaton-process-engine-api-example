@@ -15,11 +15,13 @@ that stalls merges.
 ## Decision
 
 We run **PIT (pitest)** as a **blocking gate** with `mutationThreshold = 80`, configured in
-`service/app/build.gradle.kts` and run via `./gradlew :service:app:pitest`.
+`service/app/pom.xml` (`pitest-maven`) and run via
+`./mvnw -pl service/app test-compile pitest:mutationCoverage` (after a one-time
+`./mvnw -DskipTests install` so the sibling architecture-test module resolves).
 
-- **On PRs it runs diff-scoped.** `.github/workflows/pre-merge.yml` computes the backend `*.kt` files
+- **On PRs it runs diff-scoped.** `.github/workflows/pre-merge.yml` computes the backend `*.java` files
   the PR changed (from `pull_request.base.sha`), maps them to `io.miragon.blueprint.<pkg>.<File>*`, and
-  passes them to pitest via `-PmutationTargetClasses`. It blocks the PR on the changed classes' score
+  passes them to pitest via `-DmutationTargetClasses`. It blocks the PR on the changed classes' score
   but stays off the critical path, and is skipped when a PR touches no backend code.
 - **Nightly runs the full sweep.** `.github/workflows/nightly.yml` mutates the whole
   `io.miragon.blueprint.*` module with no property override — the authoritative gate-80 run — and
@@ -27,14 +29,16 @@ We run **PIT (pitest)** as a **blocking gate** with `mutationThreshold = 80`, co
 - Both runs **exclude noise**: the generated `*ProcessApi`, the Spring bootstrap and
   `BikeCatalogueSeeder`, and the `adapter.inbound.operaton.*` workers (thin glue exercised only by the
   slow engine tests).
-- The **kill-set** is the fast mockk / `@WebMvcTest` / `@DataJpaTest` unit tests; the JGiven engine
-  integration tests (`process.*`) and the ArchUnit/Konsist tests (`architecture.*`) are excluded from
+- The **kill-set** is the fast Mockito / `@WebMvcTest` / `@DataJpaTest` unit tests; the engine
+  integration tests (`process.*`) and the ArchUnit tests (`architecture.*`) are excluded from
   the kill-set — they'd make every run slow and non-deterministic without adding mutation signal.
 
-**Why 80 and not 100:** PIT mutates JVM bytecode, and Kotlin emits synthetic constructs (`value class`
-null checks, safe-call mapping, `data class` accessors) that are *equivalent mutants* — no test can
-kill them. ~23 residual survivors here are all of that kind, so 100% is unreachable without the
-commercial arcmutate plugin. 80 is the honest bar.
+**Why 80 and not 100:** on the Kotlin codebase this repo was ported from, the ceiling was the compiler's
+synthetic bytecode — *equivalent mutants* no test could kill. Plain Java emits almost none of that, so
+the equivalent-mutant argument is largely gone. 80 is kept anyway: it preserves continuity of the gate
+through the port (the bar never moved, so scores stay comparable), and the Java mutant population first
+needs a few nightly full sweeps to establish a baseline. Raising the gate (e.g. to 90+) once those
+sweeps show consistent headroom is the recorded follow-up.
 
 **What a weak test looks like** (the two patterns the gate caught in this repo's own spike): a test
 that asserts too few of a DTO's fields — PIT blanks the unasserted ones (`return ""`) and every test
@@ -49,18 +53,18 @@ mutant is then *equivalent* to the original. Both are fixed by asserting **every
   changed.
 - **Negative / trade-offs:** mutation testing is slower than unit tests, hence the diff-scoped PR run
   and the separate nightly full sweep. Gate-80 over a single changed class is stricter granularity than
-  over the module, so a PR touching only an equivalent-mutant-heavy Kotlin `value class` can dip below
-  80 (fix: assert every field and both branches, or exclude the class), and a second, differently-named
-  top-level class in the same file is out of PR scope until the nightly sweep. The threshold is capped
-  below 100 by unavoidable Kotlin noise.
-- **Neutral:** raising the bar toward 100 is a documented upgrade path — the commercial
-  [arcmutate Kotlin plugin](https://docs.arcmutate.com/docs/kotlin.html) filters most of the
-  equivalent-mutant noise (`+KOTLIN_NO_NULLS` and Kotlin-aware mutators) and would let the threshold rise.
+  over the module, so a PR touching only a small, hard-to-test class can dip below 80 (fix: assert
+  every field and both branches, or exclude the class).
+- **Neutral:** the threshold is deliberately conservative for the port; the gate-raise (90+) waits on
+  the nightly sweeps, not on new tooling.
 
 ## Implementation notes
 
-- `service/app/build.gradle.kts` reads the optional `mutationTargetClasses` property (no property →
+- `service/app/pom.xml` defaults the `mutationTargetClasses` property to `io.miragon.blueprint.*` (the
   full-module scope, used by the nightly sweep and local runs) and sets `failWhenNoMutations = false`
   so a PR whose changed classes are all excluded/non-mutable doesn't fail the build.
+- **Engine parity across the port:** `pitest-maven` is pinned to **1.22.1** — the exact PIT engine the
+  Gradle plugin resolved before the port — plus `pitest-junit5-plugin` **1.2.2**, so pre- and post-port
+  mutation scores stay comparable.
 - Do **not** rename the `Mutation testing (PIT, gate 80)` job in `pre-merge.yml` — it is the
   branch-protection required check.

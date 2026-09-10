@@ -1,9 +1,11 @@
 package io.miragon.blueprint.adapter.inbound.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.miragon.blueprint.application.port.inbound.ListLeasingApplicationsQuery;
 import io.miragon.blueprint.domain.leasing.LeasingStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -73,23 +75,26 @@ public class ListLeasingApplicationsController {
             item.createdAt());
     }
 
+    // `required = true` / `nullable = true` mirror the non-null contract Kotlin once carried in its
+    // type system: swagger-core cannot derive them from JSpecify annotations (swagger-api/swagger-core#5001).
     public record LeasingApplicationPageDto(
-        List<LeasingApplicationSummaryDto> items,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages
+        @JsonProperty(required = true) List<LeasingApplicationSummaryDto> items,
+        @JsonProperty(required = true) int page,
+        @JsonProperty(required = true) int size,
+        @JsonProperty(required = true) long totalElements,
+        @JsonProperty(required = true) int totalPages
     ) {
     }
 
     public record LeasingApplicationSummaryDto(
-        String applicationId,
-        String customerName,
-        String bikeId,
-        @Nullable String bikeModel,
-        String status,
+        @JsonProperty(required = true) String applicationId,
+        @JsonProperty(required = true) String customerName,
+        @JsonProperty(required = true) String bikeId,
+        @Schema(nullable = true) @Nullable String bikeModel,
+        @JsonProperty(required = true) String status,
         // ISO-8601 string — see the note in GetLeasingApplicationController.LeasingApplicationDto.
         @JsonFormat(shape = JsonFormat.Shape.STRING)
+        @JsonProperty(required = true)
         LocalDateTime createdAt
     ) {
     }

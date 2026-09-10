@@ -4,7 +4,6 @@ import io.miragon.blueprint.application.port.outbound.LeasingApplicationReposito
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,7 +35,9 @@ public class LeasingApplicationPersistenceAdapter implements LeasingApplicationR
         // Newest first — the list shows the most recent applications at the top. Spring Data's paging
         // types are used only here, inside the adapter, and never returned to the application layer.
         Pageable pageable = PageRequest.of(criteria.page(), criteria.size(), Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<LeasingApplicationEntity> result =
+        // Fully qualified: the port's nested Page is an inherited member type and would shadow an
+        // imported Spring Data Page inside this class.
+        org.springframework.data.domain.Page<LeasingApplicationEntity> result =
             criteria.status() != null
                 ? repository.findAllByStatus(criteria.status(), pageable)
                 : repository.findAll(pageable);

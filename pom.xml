@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- The Boot parent supplies plugin management (incl. the repackage execution and compiler
+         defaults such as `-parameters`, which Spring MVC and the process-engine worker need for
+         parameter-name resolution) plus the `*.version` override properties used below. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.miragon.blueprint</groupId>
+    <artifactId>operaton-process-engine-api-example</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>operaton-process-engine-api-example</name>
+    <description>MiraVelo bike leasing — an Operaton embedded engine driven through the process-engine-api</description>
+
+    <modules>
+        <module>service/common-architecture-tests</module>
+        <module>service/app</module>
+    </modules>
+
+    <!-- Single source of truth for all versions (the Maven analogue of a Gradle version catalog). -->
+    <properties>
+        <java.version>21</java.version>
+
+        <operaton.version>2.1.3</operaton.version>
+        <process-engine-api.version>1.7</process-engine-api.version>
+        <process-engine-worker.version>0.8.4</process-engine-worker.version>
+        <process-engine-adapter-operaton.version>2026.08.1</process-engine-adapter-operaton.version>
+        <!-- 3.x is the Spring Boot 4 line; 3.1.0 is built against Spring Boot 4.1.0. -->
+        <springdoc.version>3.1.0</springdoc.version>
+        <!-- Maven plugin, runtime and testing library deliberately aligned on one release. -->
+        <bpmn-to-code.version>5.2.0</bpmn-to-code.version>
+        <archunit.version>1.4.2</archunit.version>
+        <!-- pitest-maven version == PIT engine version; pinned so the mutation baseline stays comparable. -->
+        <pitest.version>1.22.1</pitest.version>
+        <pitest-junit5-plugin.version>1.2.2</pitest-junit5-plugin.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+
+        <!-- Boot-managed drivers pinned via the parent's override properties. -->
+        <postgresql.version>42.7.12</postgresql.version>
+        <h2.version>2.4.240</h2.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Order matters (first import wins on overlap). The Boot BOM is imported explicitly and
+                 FIRST: the process-engine-adapter BOM was built against an older Spring Boot and its
+                 effective management embeds that Boot's entire pin set (inherited from its parent chain),
+                 which would otherwise override this project's Boot line for shared artifacts such as the
+                 Prometheus client. -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>4.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- The process-engine-adapter BOM aligns the process-engine-api / adapter / worker versions;
+                 the Operaton BOM aligns the transitive engine modules pulled by the webapp/rest starters. -->
+            <dependency>
+                <groupId>dev.bpm-crafters.process-engine-adapters</groupId>
+                <artifactId>process-engine-adapter-operaton-bom</artifactId>
+                <version>${process-engine-adapter-operaton.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.operaton.bpm</groupId>
+                <artifactId>operaton-only-bom</artifactId>
+                <version>${operaton.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.operaton.bpm.springboot</groupId>
+                <artifactId>operaton-bpm-spring-boot-starter-webapp</artifactId>
+                <version>${operaton.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.operaton.bpm.springboot</groupId>
+                <artifactId>operaton-bpm-spring-boot-starter-rest</artifactId>
+                <version>${operaton.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.operaton.bpm</groupId>
+                <artifactId>operaton-bpm-assert</artifactId>
+                <version>${operaton.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.operaton.bpm</groupId>
+                <artifactId>operaton-bpm-junit5</artifactId>
+                <version>${operaton.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.bpm-crafters.process-engine-api</groupId>
+                <artifactId>process-engine-api</artifactId>
+                <version>${process-engine-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.bpm-crafters.process-engine-worker</groupId>
+                <artifactId>process-engine-worker-spring-boot-starter</artifactId>
+                <version>${process-engine-worker.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.miragon</groupId>
+                <artifactId>bpmn-to-code-runtime</artifactId>
+                <version>${bpmn-to-code.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.miragon</groupId>
+                <artifactId>bpmn-to-code-testing</artifactId>
+                <version>${bpmn-to-code.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit</artifactId>
+                <version>${archunit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.miragon</groupId>
+                    <artifactId>bpmn-to-code-maven</artifactId>
+                    <version>${bpmn-to-code.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>${pitest.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.pitest</groupId>
+                            <artifactId>pitest-junit5-plugin</artifactId>
+                            <version>${pitest-junit5-plugin.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- Source-structure rules (one top-level type per file, no wildcard imports) — the
+                 Checkstyle successor to the former Konsist suite. See docs/adr/0014. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven-checkstyle-plugin.version}</version>
+                <configuration>
+                    <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <!-- The generated typed process API is machine-written from the BPMN models. -->
+                    <excludes>**/adapter/process/*ProcessApi.java</excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Deliberately no <repositories> block: everything resolves from Maven Central. -->
+</project>

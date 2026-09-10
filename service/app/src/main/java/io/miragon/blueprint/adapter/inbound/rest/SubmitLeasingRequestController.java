@@ -36,20 +36,23 @@ public class SubmitLeasingRequestController {
         return ResponseEntity.ok(new LeasingApplicationCreatedDto(id.value().toString()));
     }
 
+    // `required = true` mirrors the non-null contract Kotlin once carried in its type system: swagger-core
+    // cannot derive it from JSpecify annotations (swagger-api/swagger-core#5001). On this input record it
+    // also restores the Kotlin-era deserialization behavior — a missing field is rejected with 400.
     public record LeasingRequestInput(
-        @JsonProperty("customerName") String customerName,
-        @JsonProperty("email") String email,
-        @JsonProperty("age") int age,
-        @JsonProperty("monthlyNetIncome") double monthlyNetIncome,
-        @JsonProperty("bikeId") String bikeId,
-        @JsonProperty("bikeModel") String bikeModel
+        @JsonProperty(value = "customerName", required = true) String customerName,
+        @JsonProperty(value = "email", required = true) String email,
+        @JsonProperty(value = "age", required = true) int age,
+        @JsonProperty(value = "monthlyNetIncome", required = true) double monthlyNetIncome,
+        @JsonProperty(value = "bikeId", required = true) String bikeId,
+        @JsonProperty(value = "bikeModel", required = true) String bikeModel
     ) {
         @JsonCreator
         public LeasingRequestInput {
         }
     }
 
-    public record LeasingApplicationCreatedDto(String applicationId) {
+    public record LeasingApplicationCreatedDto(@JsonProperty(required = true) String applicationId) {
     }
 
     private static SubmitLeasingRequestUseCase.Command toCommand(LeasingRequestInput input) {
