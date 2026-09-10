@@ -30,7 +30,7 @@ copied from [`adr/0000-adr-template.md`](adr/0000-adr-template.md).
 | [0011](adr/0011-build-and-deployment-approach.md) | Build & deployment: a buildpacks (`spring-boot:build-image`) OCI image for the headless backend. |
 | [0012](adr/0012-polling-for-eventual-consistency-in-e2e-tests.md) | Poll for eventual consistency in end-to-end tests. |
 | [0013](adr/0013-operaton-as-the-process-engine.md) | Operaton as the embedded process engine. |
-| [0014](adr/0014-checkstyle-replaces-konsist.md) | Checkstyle replaces Konsist for the source-level rules (supersedes 0007). |
+| [0014](adr/0014-architecture-tests-after-the-java-port.md) | Architecture tests after the Java port: ArchUnit + Checkstyle (supersedes 0007). |
 
 ## Notes
 
