@@ -13,9 +13,9 @@ import io.miragon.blueprint.application.port.inbound.RequestOrderCancellationUse
 import io.miragon.blueprint.application.port.inbound.SendCancellationConfirmationUseCase;
 import io.miragon.blueprint.application.port.inbound.SendContractUseCase;
 import io.miragon.blueprint.application.port.inbound.SendSignatureReminderUseCase;
-import io.miragon.blueprint.application.port.inbound.ValidateApplicationUseCase;
 import io.miragon.blueprint.application.port.outbound.LeasingProcess;
 import io.miragon.blueprint.domain.bike.BikeId;
+import io.miragon.blueprint.domain.bike.BikeUnavailableException;
 import io.miragon.blueprint.domain.bike.OrderId;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.CustomerName;
@@ -24,9 +24,11 @@ import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import io.miragon.blueprint.domain.leasing.LeasingStatus;
 import java.time.LocalDateTime;
 import java.util.Map;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.operaton.bpm.engine.HistoryService;
 import org.operaton.bpm.engine.ProcessEngine;
 import org.operaton.bpm.engine.RuntimeService;
 import org.operaton.bpm.engine.TaskService;
@@ -43,6 +45,7 @@ import static io.miragon.blueprint.process.util.TimerUtils.fireTimer;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -71,10 +74,10 @@ public class BikeLeasingProcessTest {
     private TaskService taskService;
 
     @Autowired
-    private ProcessEngine processEngine;
+    private HistoryService historyService;
 
-    @MockitoBean
-    private ValidateApplicationUseCase validateApplicationUseCase;
+    @Autowired
+    private ProcessEngine processEngine;
 
     @MockitoBean
     private RejectApplicationUseCase rejectApplicationUseCase;
@@ -112,8 +115,7 @@ public class BikeLeasingProcessTest {
     @BeforeEach
     public void setUp() {
         init(processEngine);
-        given(orderBikeUseCase.orderBike(any()))
-            .willReturn(new OrderBikeUseCase.Result(new OrderId("ORDER-1"), true));
+        given(orderBikeUseCase.orderBike(any())).willReturn(new OrderId("ORDER-1"));
     }
 
     @Test
@@ -122,7 +124,7 @@ public class BikeLeasingProcessTest {
         ApplicationId id = submit(35, 3500.0);
         ProcessInstance instance = findProcessInstance(runtimeService, id);
 
-        // validate -> DMN -> conclude-contract sub-process parks on the signature wait state
+        // DMN -> conclude-contract sub-process parks on the signature wait state
         continueToNextWaitState(processEngine);
 
         process.correlateContractSigned(id); // forks into insurance + bike order, joins -> handover wait state
@@ -137,7 +139,6 @@ public class BikeLeasingProcessTest {
         assertThat(instance)
             .isEnded()
             .hasPassedInOrder(
-                Elements.SERVICE_TASK_VALIDATE_APPLICATION.getValue(),
                 Elements.BUSINESS_RULE_TASK_CHECK_CREDIT_RATING.getValue(),
                 Elements.SERVICE_TASK_SEND_CONTRACT.getValue(),
                 Elements.SERVICE_TASK_ISSUE_INSURANCE_POLICY.getValue(),
@@ -145,6 +146,7 @@ public class BikeLeasingProcessTest {
                 Elements.SERVICE_TASK_ACTIVATE_LEASING.getValue(),
                 Elements.END_EVENT_LEASING_ACTIVE.getValue())
             .hasNotPassed(
+                Elements.EVENT_BIKE_UNAVAILABLE.getValue(),
                 Elements.END_EVENT_APPLICATION_REJECTED.getValue(),
                 Elements.END_EVENT_APPLICATION_CANCELLED.getValue(),
                 Elements.END_EVENT_CONTRACT_CANCELLED.getValue());
@@ -183,7 +185,7 @@ public class BikeLeasingProcessTest {
         // age below 18 cannot sign a leasing contract, so the DMN returns solvent = false
         ApplicationId id = submit(15, 3500.0);
 
-        continueToNextWaitState(processEngine); // validate -> DMN -> not solvent -> rejection -> end
+        continueToNextWaitState(processEngine); // DMN -> not solvent -> rejection -> end
 
         then(rejectApplicationUseCase).should(times(1)).reject(id);
         then(sendContractUseCase).should(never()).sendContract(any());
@@ -237,19 +239,10 @@ public class BikeLeasingProcessTest {
     @Test
     @DisplayName("bike unavailable - clarifying an alternative re-orders and leasing becomes active")
     public void bikeUnavailableClarifyingAnAlternativeReOrdersAndLeasingBecomesActive() {
-        // the first order finds the requested bike unavailable, the re-order after the alternative succeeds
-        given(orderBikeUseCase.orderBike(any()))
-            .willReturn(
-                new OrderBikeUseCase.Result(null, false),
-                new OrderBikeUseCase.Result(new OrderId("ORDER-2"), true));
-
-        ApplicationId id = submit(35, 3500.0);
+        ApplicationId id = submitUntilBikeUnavailable();
         ProcessInstance instance = findProcessInstance(runtimeService, id);
 
-        continueToNextWaitState(processEngine); // parks on the signature wait state
-        process.correlateContractSigned(id);
-        continueToNextWaitState(processEngine); // fork -> order finds bike unavailable -> parks on clarify-alternative
-
+        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any()); // the alternative is in stock
         // the alternative is clarified from the outside — the "external" completion of the user task
         process.completeAlternativeClarification(id, true, new BikeId("BIKE-ALT"));
         continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
@@ -262,6 +255,7 @@ public class BikeLeasingProcessTest {
         assertThat(instance)
             .isEnded()
             .hasPassed(
+                Elements.EVENT_BIKE_UNAVAILABLE.getValue(),
                 Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue(),
                 Elements.SERVICE_TASK_ORDER_BIKE.getValue(),
                 Elements.END_EVENT_LEASING_ACTIVE.getValue())
@@ -270,6 +264,96 @@ public class BikeLeasingProcessTest {
                 Elements.END_EVENT_APPLICATION_REJECTED.getValue());
 
         then(orderBikeUseCase).should(times(2)).orderBike(id);
+    }
+
+    @Test
+    @DisplayName("bike unavailable - declining the alternative reverses contract and policy without cancelling an order")
+    public void bikeUnavailableDecliningTheAlternativeReversesContractAndPolicyWithoutCancellingAnOrder() {
+        ApplicationId id = submitUntilBikeUnavailable();
+        ProcessInstance instance = findProcessInstance(runtimeService, id);
+
+        process.completeAlternativeClarification(id, false, null);
+        continueToNextWaitState(processEngine); // -> compensation -> sendCancellationConfirmation -> end cancelled
+
+        assertThat(instance)
+            .isEnded()
+            .hasPassed(
+                Elements.EVENT_TRIGGER_REVERSAL.getValue(),
+                Elements.SERVICE_TASK_CANCEL_CONTRACT.getValue(),
+                Elements.SERVICE_TASK_CANCEL_POLICY.getValue(),
+                Elements.SERVICE_TASK_CONFIRM_CONTRACT_CANCELLATION.getValue(),
+                Elements.END_EVENT_CONTRACT_CANCELLED.getValue())
+            .hasNotPassed(
+                Elements.CALL_ACTIVITY_CANCEL_BIKE_ORDER.getValue(),
+                Elements.END_EVENT_LEASING_ACTIVE.getValue());
+
+        then(sendCancellationConfirmationUseCase).should(atLeast(1)).sendCancellationConfirmation(id);
+        then(requestOrderCancellationUseCase).should(never()).requestCancellation(any());
+    }
+
+    @Test
+    @DisplayName("abort - withdrawing while clarifying an alternative compensates contract and policy without cancelling an order")
+    public void abortWithdrawingWhileClarifyingAnAlternativeCompensatesContractAndPolicyWithoutCancellingAnOrder() {
+        ApplicationId id = submitUntilBikeUnavailable();
+        ProcessInstance instance = findProcessInstance(runtimeService, id);
+
+        process.correlateApplicationWithdrawn(id);
+        continueToNextWaitState(processEngine); // -> compensation -> sendCancellationConfirmation -> end cancelled
+
+        assertThat(instance)
+            .isEnded()
+            .hasPassed(
+                Elements.SERVICE_TASK_CANCEL_CONTRACT.getValue(),
+                Elements.SERVICE_TASK_CANCEL_POLICY.getValue(),
+                Elements.SERVICE_TASK_SEND_CANCELLATION_CONFIRMATION.getValue(),
+                Elements.END_EVENT_APPLICATION_CANCELLED.getValue())
+            .hasNotPassed(Elements.CALL_ACTIVITY_CANCEL_BIKE_ORDER.getValue());
+
+        then(requestOrderCancellationUseCase).should(never()).requestCancellation(any());
+    }
+
+    @Test
+    @DisplayName("abort - withdrawing after an accepted alternative cancels the one placed order exactly once")
+    public void abortWithdrawingAfterAnAcceptedAlternativeCancelsTheOnePlacedOrderExactlyOnce() {
+        given(requestOrderCancellationUseCase.requestCancellation(any())).willReturn(true);
+
+        ApplicationId id = submitUntilBikeUnavailable();
+        ProcessInstance instance = findProcessInstance(runtimeService, id);
+
+        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any()); // the alternative is in stock
+        process.completeAlternativeClarification(id, true, new BikeId("BIKE-ALT"));
+        continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
+
+        process.correlateApplicationWithdrawn(id);
+        continueToNextWaitState(processEngine);
+
+        Task task =
+            taskService
+                .createTaskQuery()
+                .taskDefinitionKey(CancelBikeOrderProcessApi.Elements.USER_TASK_CLARIFY_RETURN.getValue())
+                .singleResult();
+        taskService.complete(task.getId(), Map.of("returnClarified", true));
+        continueToNextWaitState(processEngine);
+
+        assertThat(instance).isEnded().hasPassed(Elements.END_EVENT_APPLICATION_CANCELLED.getValue());
+        long orderCancellations =
+            historyService
+                .createHistoricProcessInstanceQuery()
+                .processDefinitionKey(CancelBikeOrderProcessApi.PROCESS_ID.getValue())
+                .superProcessInstanceId(instance.getId())
+                .count();
+        Assertions.assertThat(orderCancellations).isEqualTo(1);
+    }
+
+    /** Drives a signed, insured application to the clarify-alternative task: the dealer has no bike. */
+    private ApplicationId submitUntilBikeUnavailable() {
+        given(orderBikeUseCase.orderBike(any())).willThrow(new BikeUnavailableException(new BikeId("BIKE-TEST")));
+
+        ApplicationId id = submit(35, 3500.0);
+        continueToNextWaitState(processEngine); // parks on the signature wait state
+        process.correlateContractSigned(id);
+        continueToNextWaitState(processEngine); // fork -> order raises bikeUnavailable -> parks on clarify-alternative
+        return id;
     }
 
     private ApplicationId submit(int age, double income) {

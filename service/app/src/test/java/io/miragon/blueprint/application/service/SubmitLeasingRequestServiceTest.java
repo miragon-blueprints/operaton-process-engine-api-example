@@ -17,11 +17,13 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 class SubmitLeasingRequestServiceTest {
 
@@ -63,5 +65,26 @@ class SubmitLeasingRequestServiceTest {
         then(repository).shouldHaveNoMoreInteractions();
         then(bikePortfolio).shouldHaveNoMoreInteractions();
         then(process).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("submit rejects a request without income and starts no process")
+    void submitRejectsARequestWithoutIncomeAndStartsNoProcess() {
+
+        // given: a leasing-request command without any income
+        SubmitLeasingRequestUseCase.Command command =
+            new SubmitLeasingRequestUseCase.Command(
+                new CustomerName("John Doe"),
+                new Email("john.doe@test.com"),
+                35,
+                0.0,
+                new BikeId("BIKE-900"),
+                "Gravel Explorer 900");
+        given(bikePortfolio.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        // when / then: the request is refused before anything is persisted or started
+        assertThatThrownBy(() -> underTest.submit(command)).isInstanceOf(IllegalArgumentException.class);
+        then(repository).should(never()).save(any());
+        then(process).should(never()).submitRequest(any());
     }
 }

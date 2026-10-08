@@ -44,7 +44,7 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final ElementId END_EVENT_PROSPECT_REMINDED = new ElementId("endEvent_prospectReminded");
 
-    public static final ElementId EVENT_APPLICATION_INVALID = new ElementId("event_applicationInvalid");
+    public static final ElementId EVENT_BIKE_UNAVAILABLE = new ElementId("event_bikeUnavailable");
 
     public static final ElementId EVENT_COMPENSATE_CONTRACT = new ElementId("event_compensateContract");
 
@@ -72,8 +72,6 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final ElementId GATEWAY_AWAIT_SIGNATURE = new ElementId("gateway_awaitSignature");
 
-    public static final ElementId GATEWAY_BIKE_AVAILABLE = new ElementId("gateway_bikeAvailable");
-
     public static final ElementId GATEWAY_BIKE_SOURCE_JOIN = new ElementId("gateway_bikeSourceJoin");
 
     public static final ElementId GATEWAY_FORK = new ElementId("gateway_fork");
@@ -90,6 +88,8 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final ElementId SERVICE_TASK_CANCEL_POLICY = new ElementId("serviceTask_cancelPolicy");
 
+    public static final ElementId SERVICE_TASK_CONFIRM_CONTRACT_CANCELLATION = new ElementId("serviceTask_confirmContractCancellation");
+
     public static final ElementId SERVICE_TASK_ISSUE_INSURANCE_POLICY = new ElementId("serviceTask_issueInsurancePolicy");
 
     public static final ElementId SERVICE_TASK_ORDER_BIKE = new ElementId("serviceTask_orderBike");
@@ -101,8 +101,6 @@ public final class BikeLeasingProcessProcessApi {
     public static final ElementId SERVICE_TASK_SEND_REJECTION = new ElementId("serviceTask_sendRejection");
 
     public static final ElementId SERVICE_TASK_SEND_REMINDER_MAIL = new ElementId("serviceTask_sendReminderMail");
-
-    public static final ElementId SERVICE_TASK_VALIDATE_APPLICATION = new ElementId("serviceTask_validateApplication");
 
     public static final ElementId START_EVENT_APPLICATION_WITHDRAWN = new ElementId("startEvent_applicationWithdrawn");
 
@@ -167,8 +165,6 @@ public final class BikeLeasingProcessProcessApi {
     public static final String SEND_REJECTION = "sendRejection";
 
     public static final String SEND_REMINDER_MAIL = "sendReminderMail";
-
-    public static final String VALIDATE_APPLICATION = "validateApplication";
   }
 
   public static final class Timers {
@@ -180,7 +176,7 @@ public final class BikeLeasingProcessProcessApi {
   }
 
   public static final class Errors {
-    public static final BpmnError APPLICATION_INVALID = new BpmnError("Application_Invalid", "applicationInvalid");
+    public static final BpmnError BIKE_UNAVAILABLE = new BpmnError("Bike_Unavailable", "bikeUnavailable");
   }
 
   public static final class Escalations {
@@ -212,8 +208,6 @@ public final class BikeLeasingProcessProcessApi {
     }
 
     public static final class ServiceTaskOrderBike {
-      public static final VariableName.Output BIKE_AVAILABLE = new VariableName.Output("bikeAvailable");
-
       public static final VariableName.Output ORDER_ID = new VariableName.Output("orderId");
     }
 
@@ -246,15 +240,15 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnFlow FLOW_AWAIT_TO_SIGNED = new BpmnFlow("flow_awaitToSigned", null, "gateway_awaitSignature", "event_contractSigned", null, false);
 
-    public static final BpmnFlow FLOW_BIKE_AVAILABLE = new BpmnFlow("flow_bikeAvailable", "Yes", "gateway_bikeAvailable", "gateway_join", null, true);
-
     public static final BpmnFlow FLOW_BIKE_SOURCE_TO_ORDER = new BpmnFlow("flow_bikeSourceToOrder", null, "gateway_bikeSourceJoin", "serviceTask_orderBike", null, false);
 
-    public static final BpmnFlow FLOW_BIKE_UNAVAILABLE = new BpmnFlow("flow_bikeUnavailable", "No", "gateway_bikeAvailable", "userTask_clarifyAlternative", "${!bikeAvailable}", false);
+    public static final BpmnFlow FLOW_BIKE_UNAVAILABLE = new BpmnFlow("flow_bikeUnavailable", null, "event_bikeUnavailable", "userTask_clarifyAlternative", null, false);
 
     public static final BpmnFlow FLOW_CLARIFY_TO_ALTERNATIVE_GATEWAY = new BpmnFlow("flow_clarifyToAlternativeGateway", null, "userTask_clarifyAlternative", "gateway_alternativeFound", null, false);
 
     public static final BpmnFlow FLOW_CONFIRMATION_TO_CANCELLED = new BpmnFlow("flow_confirmationToCancelled", null, "serviceTask_sendCancellationConfirmation", "endEvent_applicationCancelled", null, false);
+
+    public static final BpmnFlow FLOW_CONFIRMATION_TO_CONTRACT_CANCELLED = new BpmnFlow("flow_confirmationToContractCancelled", null, "serviceTask_confirmContractCancellation", "endEvent_contractCancelled", null, false);
 
     public static final BpmnFlow FLOW_CONTRACT_CONCLUDED_TO_FORK = new BpmnFlow("flow_contractConcludedToFork", null, "subProcess_concludeContract", "gateway_fork", null, false);
 
@@ -274,8 +268,6 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnFlow FLOW_INSURANCE_TO_JOIN = new BpmnFlow("flow_insuranceToJoin", null, "serviceTask_issueInsurancePolicy", "gateway_join", null, false);
 
-    public static final BpmnFlow FLOW_INVALID_TO_REJECTION = new BpmnFlow("flow_invalidToRejection", null, "event_applicationInvalid", "gateway_rejectionJoin", null, false);
-
     public static final BpmnFlow FLOW_JOIN_TO_HANDOVER = new BpmnFlow("flow_joinToHandover", null, "gateway_join", "event_handoverReported", null, false);
 
     public static final BpmnFlow FLOW_MAIL_TO_PROSPECT_REMINDED = new BpmnFlow("flow_mailToProspectReminded", null, "serviceTask_sendReminderMail", "endEvent_prospectReminded", null, false);
@@ -286,7 +278,7 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnFlow FLOW_NOT_SOLVENT = new BpmnFlow("flow_notSolvent", "No", "gateway_isSolvent", "gateway_rejectionJoin", "${!solvent}", false);
 
-    public static final BpmnFlow FLOW_ORDERED_TO_BIKE_AVAILABLE = new BpmnFlow("flow_orderedToBikeAvailable", null, "serviceTask_orderBike", "gateway_bikeAvailable", null, false);
+    public static final BpmnFlow FLOW_ORDERED_TO_JOIN = new BpmnFlow("flow_orderedToJoin", null, "serviceTask_orderBike", "gateway_join", null, false);
 
     public static final BpmnFlow FLOW_REJECTION_JOINED = new BpmnFlow("flow_rejectionJoined", null, "gateway_rejectionJoin", "serviceTask_sendRejection", null, false);
 
@@ -294,17 +286,15 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnFlow FLOW_REMINDER_TO_MAIL = new BpmnFlow("flow_reminderToMail", null, "event_signatureReminder", "serviceTask_sendReminderMail", null, false);
 
-    public static final BpmnFlow FLOW_REQUEST_TO_VALIDATION = new BpmnFlow("flow_requestToValidation", null, "startEvent_leasingRequestReceived", "serviceTask_validateApplication", null, false);
+    public static final BpmnFlow FLOW_REQUEST_TO_CREDIT_CHECK = new BpmnFlow("flow_requestToCreditCheck", null, "startEvent_leasingRequestReceived", "businessRuleTask_checkCreditRating", null, false);
 
     public static final BpmnFlow FLOW_REVERSAL_TO_CONFIRMATION = new BpmnFlow("flow_reversalToConfirmation", null, "event_reverseApplication", "serviceTask_sendCancellationConfirmation", null, false);
-
-    public static final BpmnFlow FLOW_REVERSAL_TO_CONTRACT_CANCELLED = new BpmnFlow("flow_reversalToContractCancelled", null, "event_triggerReversal", "endEvent_contractCancelled", null, false);
 
     public static final BpmnFlow FLOW_SIGNED_TO_CONTRACT_VALID = new BpmnFlow("flow_signedToContractValid", null, "event_contractSigned", "endEvent_contractValid", null, false);
 
     public static final BpmnFlow FLOW_SOLVENT = new BpmnFlow("flow_solvent", null, "gateway_isSolvent", "subProcess_concludeContract", null, true);
 
-    public static final BpmnFlow FLOW_VALIDATED_TO_CREDIT_CHECK = new BpmnFlow("flow_validatedToCreditCheck", null, "serviceTask_validateApplication", "businessRuleTask_checkCreditRating", null, false);
+    public static final BpmnFlow FLOW_TRIGGER_REVERSAL_TO_CONFIRMATION = new BpmnFlow("flow_triggerReversalToConfirmation", null, "event_triggerReversal", "serviceTask_confirmContractCancellation", null, false);
 
     public static final BpmnFlow FLOW_WITHDRAWAL_ELAPSED_TO_ACTIVE = new BpmnFlow("flow_withdrawalElapsedToActive", null, "event_withdrawalPeriodElapsed", "serviceTask_activateLeasing", null, false);
 
@@ -316,7 +306,7 @@ public final class BikeLeasingProcessProcessApi {
    * Intended for tooling and tests, not worker runtime code.
    */
   public static final class Relations {
-    public static final BpmnRelations BUSINESS_RULE_TASK_CHECK_CREDIT_RATING = new BpmnRelations("Check credit rating", List.of("serviceTask_validateApplication"), List.of("gateway_isSolvent"), null, null, List.of(), "BUSINESS_RULE_TASK");
+    public static final BpmnRelations BUSINESS_RULE_TASK_CHECK_CREDIT_RATING = new BpmnRelations("Check credit rating", List.of("startEvent_leasingRequestReceived"), List.of("gateway_isSolvent"), null, null, List.of(), "BUSINESS_RULE_TASK");
 
     public static final BpmnRelations CALL_ACTIVITY_CANCEL_BIKE_ORDER = new BpmnRelations("Cancel bike order", List.of(), List.of(), null, null, List.of(), "CALL_ACTIVITY");
 
@@ -324,7 +314,7 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations END_EVENT_APPLICATION_REJECTED = new BpmnRelations("Application rejected", List.of("serviceTask_sendRejection"), List.of(), null, null, List.of(), "END_EVENT");
 
-    public static final BpmnRelations END_EVENT_CONTRACT_CANCELLED = new BpmnRelations("Contract cancelled", List.of("event_triggerReversal"), List.of(), null, null, List.of(), "END_EVENT");
+    public static final BpmnRelations END_EVENT_CONTRACT_CANCELLED = new BpmnRelations("Contract cancelled", List.of("serviceTask_confirmContractCancellation"), List.of(), null, null, List.of(), "END_EVENT");
 
     public static final BpmnRelations END_EVENT_CONTRACT_VALID = new BpmnRelations("Contract valid", List.of("event_contractSigned"), List.of(), "subProcess_concludeContract", null, List.of(), "END_EVENT");
 
@@ -334,7 +324,7 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations END_EVENT_PROSPECT_REMINDED = new BpmnRelations("Prospect reminded", List.of("serviceTask_sendReminderMail"), List.of(), null, null, List.of(), "END_EVENT");
 
-    public static final BpmnRelations EVENT_APPLICATION_INVALID = new BpmnRelations("Application invalid", List.of(), List.of("gateway_rejectionJoin"), null, "serviceTask_validateApplication", List.of(), "ERROR_BOUNDARY_EVENT");
+    public static final BpmnRelations EVENT_BIKE_UNAVAILABLE = new BpmnRelations("Bike unavailable", List.of(), List.of("userTask_clarifyAlternative"), null, "serviceTask_orderBike", List.of(), "ERROR_BOUNDARY_EVENT");
 
     public static final BpmnRelations EVENT_COMPENSATE_CONTRACT = new BpmnRelations("Compensate contract", List.of(), List.of(), null, "subProcess_concludeContract", List.of(), "COMPENSATION_BOUNDARY_EVENT");
 
@@ -354,7 +344,7 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations EVENT_SIGNATURE_REMINDER = new BpmnRelations("7 days", List.of(), List.of("serviceTask_sendReminderMail"), null, "subProcess_concludeContract", List.of(), "TIMER_BOUNDARY_EVENT");
 
-    public static final BpmnRelations EVENT_TRIGGER_REVERSAL = new BpmnRelations("Trigger reversal", List.of("gateway_alternativeFound"), List.of("endEvent_contractCancelled"), null, null, List.of(), "COMPENSATION_INTERMEDIATE_THROW_EVENT");
+    public static final BpmnRelations EVENT_TRIGGER_REVERSAL = new BpmnRelations("Trigger reversal", List.of("gateway_alternativeFound"), List.of("serviceTask_confirmContractCancellation"), null, null, List.of(), "COMPENSATION_INTERMEDIATE_THROW_EVENT");
 
     public static final BpmnRelations EVENT_WITHDRAWAL_PERIOD_ELAPSED = new BpmnRelations("Await end of withdrawal period", List.of("event_handoverReported"), List.of("serviceTask_activateLeasing"), null, null, List.of(), "TIMER_INTERMEDIATE_CATCH_EVENT");
 
@@ -362,17 +352,15 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations GATEWAY_AWAIT_SIGNATURE = new BpmnRelations(null, List.of("serviceTask_sendContract"), List.of("event_contractSigned", "event_signatureDeadline"), "subProcess_concludeContract", null, List.of(), "EVENT_BASED_GATEWAY");
 
-    public static final BpmnRelations GATEWAY_BIKE_AVAILABLE = new BpmnRelations("Bike available?", List.of("serviceTask_orderBike"), List.of("gateway_join", "userTask_clarifyAlternative"), null, null, List.of(), "EXCLUSIVE_GATEWAY");
-
     public static final BpmnRelations GATEWAY_BIKE_SOURCE_JOIN = new BpmnRelations(null, List.of("gateway_fork", "gateway_alternativeFound"), List.of("serviceTask_orderBike"), null, null, List.of(), "EXCLUSIVE_GATEWAY");
 
     public static final BpmnRelations GATEWAY_FORK = new BpmnRelations(null, List.of("subProcess_concludeContract"), List.of("gateway_bikeSourceJoin", "serviceTask_issueInsurancePolicy"), null, null, List.of(), "PARALLEL_GATEWAY");
 
     public static final BpmnRelations GATEWAY_IS_SOLVENT = new BpmnRelations("Solvent?", List.of("businessRuleTask_checkCreditRating"), List.of("subProcess_concludeContract", "gateway_rejectionJoin"), null, null, List.of(), "EXCLUSIVE_GATEWAY");
 
-    public static final BpmnRelations GATEWAY_JOIN = new BpmnRelations(null, List.of("serviceTask_issueInsurancePolicy", "gateway_bikeAvailable"), List.of("event_handoverReported"), null, null, List.of(), "PARALLEL_GATEWAY");
+    public static final BpmnRelations GATEWAY_JOIN = new BpmnRelations(null, List.of("serviceTask_issueInsurancePolicy", "serviceTask_orderBike"), List.of("event_handoverReported"), null, null, List.of(), "PARALLEL_GATEWAY");
 
-    public static final BpmnRelations GATEWAY_REJECTION_JOIN = new BpmnRelations("Rejection reason", List.of("event_applicationInvalid", "gateway_isSolvent", "event_contractNotSigned"), List.of("serviceTask_sendRejection"), null, null, List.of(), "EXCLUSIVE_GATEWAY");
+    public static final BpmnRelations GATEWAY_REJECTION_JOIN = new BpmnRelations("Rejection reason", List.of("gateway_isSolvent", "event_contractNotSigned"), List.of("serviceTask_sendRejection"), null, null, List.of(), "EXCLUSIVE_GATEWAY");
 
     public static final BpmnRelations SERVICE_TASK_ACTIVATE_LEASING = new BpmnRelations("Activate leasing", List.of("event_withdrawalPeriodElapsed"), List.of("endEvent_leasingActive"), null, null, List.of(), "SERVICE_TASK");
 
@@ -380,9 +368,11 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations SERVICE_TASK_CANCEL_POLICY = new BpmnRelations("Cancel policy", List.of(), List.of(), null, null, List.of(), "SERVICE_TASK");
 
+    public static final BpmnRelations SERVICE_TASK_CONFIRM_CONTRACT_CANCELLATION = new BpmnRelations("Send cancellation confirmation", List.of("event_triggerReversal"), List.of("endEvent_contractCancelled"), null, null, List.of(), "SERVICE_TASK");
+
     public static final BpmnRelations SERVICE_TASK_ISSUE_INSURANCE_POLICY = new BpmnRelations("Issue insurance policy", List.of("gateway_fork"), List.of("gateway_join"), null, null, List.of("event_compensateInsurance"), "SERVICE_TASK");
 
-    public static final BpmnRelations SERVICE_TASK_ORDER_BIKE = new BpmnRelations("Order bike from dealer", List.of("gateway_bikeSourceJoin"), List.of("gateway_bikeAvailable"), null, null, List.of("event_compensateOrder"), "SERVICE_TASK");
+    public static final BpmnRelations SERVICE_TASK_ORDER_BIKE = new BpmnRelations("Order bike from dealer", List.of("gateway_bikeSourceJoin"), List.of("gateway_join"), null, null, List.of("event_bikeUnavailable", "event_compensateOrder"), "SERVICE_TASK");
 
     public static final BpmnRelations SERVICE_TASK_SEND_CANCELLATION_CONFIRMATION = new BpmnRelations("Send cancellation confirmation", List.of("event_reverseApplication"), List.of("endEvent_applicationCancelled"), "subProcess_applicationWithdrawn", null, List.of(), "SERVICE_TASK");
 
@@ -392,18 +382,16 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final BpmnRelations SERVICE_TASK_SEND_REMINDER_MAIL = new BpmnRelations("Send reminder mail", List.of("event_signatureReminder"), List.of("endEvent_prospectReminded"), null, null, List.of(), "SERVICE_TASK");
 
-    public static final BpmnRelations SERVICE_TASK_VALIDATE_APPLICATION = new BpmnRelations("Validate application", List.of("startEvent_leasingRequestReceived"), List.of("businessRuleTask_checkCreditRating"), null, null, List.of("event_applicationInvalid"), "SERVICE_TASK");
-
     public static final BpmnRelations START_EVENT_APPLICATION_WITHDRAWN = new BpmnRelations("Request withdrawn", List.of(), List.of("event_reverseApplication"), "subProcess_applicationWithdrawn", null, List.of(), "MESSAGE_START_EVENT");
 
     public static final BpmnRelations START_EVENT_CUSTOMER_ELIGIBLE = new BpmnRelations("Customer eligible", List.of(), List.of("serviceTask_sendContract"), "subProcess_concludeContract", null, List.of(), "START_EVENT");
 
-    public static final BpmnRelations START_EVENT_LEASING_REQUEST_RECEIVED = new BpmnRelations("Leasing request received", List.of(), List.of("serviceTask_validateApplication"), null, null, List.of(), "MESSAGE_START_EVENT");
+    public static final BpmnRelations START_EVENT_LEASING_REQUEST_RECEIVED = new BpmnRelations("Leasing request received", List.of(), List.of("businessRuleTask_checkCreditRating"), null, null, List.of(), "MESSAGE_START_EVENT");
 
     public static final BpmnRelations SUB_PROCESS_APPLICATION_WITHDRAWN = new BpmnRelations("Application withdrawn", List.of(), List.of(), null, null, List.of(), "EVENT_SUB_PROCESS");
 
     public static final BpmnRelations SUB_PROCESS_CONCLUDE_CONTRACT = new BpmnRelations("Conclude contract", List.of("gateway_isSolvent"), List.of("gateway_fork"), null, null, List.of("event_compensateContract", "event_contractNotSigned", "event_signatureReminder"), "SUB_PROCESS");
 
-    public static final BpmnRelations USER_TASK_CLARIFY_ALTERNATIVE = new BpmnRelations("Clarify alternative with customer", List.of("gateway_bikeAvailable"), List.of("gateway_alternativeFound"), null, null, List.of(), "USER_TASK");
+    public static final BpmnRelations USER_TASK_CLARIFY_ALTERNATIVE = new BpmnRelations("Clarify alternative with customer", List.of("event_bikeUnavailable"), List.of("gateway_alternativeFound"), null, null, List.of(), "USER_TASK");
   }
 }

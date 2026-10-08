@@ -101,8 +101,8 @@ docs/{README.md, adr/, assets/} ADR index + records + the process diagram
   says a test would have noticed. It runs diff-scoped on PRs and a full-module sweep nightly.
 - **Process tests** (`operaton-bpm-assert`) drive the deployed model — timers and async continuations
   are fired and messages correlated by hand, while the real `@ProcessEngineWorker` beans consume the
-  external service tasks — covering happy-path, escalation, abort, DMN rejection, and the
-  bike-unavailable → alternative-selection loop.
+  external service tasks — covering happy-path, escalation, abort, DMN rejection, the
+  bike-unavailable → alternative-selection loop, and a declined alternative.
 - **Model validation** (`bpmn-to-code-testing`) checks the `.bpmn` models structurally at build time
   (`BpmnRules.all()` plus a custom rule requiring every service task to be an external task with a topic).
 - **Bruno + CI** proves the same scenarios against the *running* app: domain REST endpoints drive the
@@ -159,7 +159,8 @@ If the requested bike is out of stock, the `Clarify alternative with customer` u
   in process variables (see the `bpmn:documentation` on each task).
 
 Bike availability itself is decided by a `BikeDealerPort` outbound adapter (`checkAvailability` /
-`order`) whose small out-of-stock deny-list drives the branch.
+`order`) whose small out-of-stock deny-list drives the branch: an out-of-stock bike leaves the order
+task through the `bikeUnavailable` **error boundary event**, so no order compensation is registered.
 
 ## Incident demo
 

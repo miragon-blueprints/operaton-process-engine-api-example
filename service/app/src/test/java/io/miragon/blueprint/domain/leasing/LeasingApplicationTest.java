@@ -2,6 +2,7 @@ package io.miragon.blueprint.domain.leasing;
 
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.bike.OrderId;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -102,11 +103,32 @@ class LeasingApplicationTest {
     }
 
     @Test
-    @DisplayName("validate fails when the monthly net income is zero")
-    void validateFailsWhenTheMonthlyNetIncomeIsZero() {
-        // given: an application without income
-        LeasingApplication application = testLeasingApplication().monthlyNetIncome(0.0).build();
-        // when / then: validation reports the application as invalid
-        assertThatThrownBy(application::validate).isInstanceOf(ApplicationInvalidException.class);
+    @DisplayName("receive rejects an application whose monthly net income is zero")
+    void receiveRejectsAnApplicationWhoseMonthlyNetIncomeIsZero() {
+        // when / then: an application without income cannot be received
+        assertThatThrownBy(() -> receiveApplication(0.0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Monthly net income must be greater than zero");
+    }
+
+    @Test
+    @DisplayName("receive accepts the smallest positive monthly net income as RECEIVED")
+    void receiveAcceptsTheSmallestPositiveMonthlyNetIncomeAsReceived() {
+        // when: an application with a minimal income is received
+        LeasingApplication application = receiveApplication(0.01);
+        // then: it starts its lifecycle as RECEIVED
+        assertThat(application.status()).isEqualTo(LeasingStatus.RECEIVED);
+        assertThat(application.monthlyNetIncome()).isEqualTo(0.01);
+    }
+
+    private LeasingApplication receiveApplication(double monthlyNetIncome) {
+        return LeasingApplication.receive(
+            ApplicationId.newId(),
+            new CustomerName("John Doe"),
+            new Email("john.doe@test.com"),
+            35,
+            monthlyNetIncome,
+            new BikeId("BIKE-900"),
+            LocalDateTime.parse("2024-01-15T10:30:00"));
     }
 }
