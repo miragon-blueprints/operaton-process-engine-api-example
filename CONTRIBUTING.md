@@ -45,7 +45,9 @@ cd bruno && npx --yes @usebruno/cli@4.0.0 run . --env local -r
 
 They start a case over the domain REST endpoints, complete user tasks and fire timer jobs via the
 Operaton `/engine-rest` API, and assert the whole flow — happy path, escalation, abort, DMN
-rejection, the bike-unavailable → alternative-selection loop, and the incident demo.
+rejection, the bike-unavailable → alternative-selection loop, the incident demo, a declined
+alternative (contract and policy are compensated, no order is cancelled), and a request without income
+that is refused with a 400 before any process starts.
 
 Confirm <http://localhost:8080/operaton> (admin/admin), <http://localhost:8080/swagger-ui.html> and
 <http://localhost:8080/actuator/health> (status `UP`) all load.
