@@ -5,6 +5,7 @@ import io.miragon.blueprint.application.port.outbound.LeasingApplicationReposito
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.bike.BikeUnavailableException;
 import io.miragon.blueprint.domain.bike.OrderId;
+import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import io.miragon.blueprint.domain.leasing.LeasingStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -110,5 +111,22 @@ public class OrderBikeServiceTest {
             .hasMessage("Bike BIKE-OOS is not available at the dealer");
         then(repository).should().save(argThat(it -> it.bikeId().equals(alternative) && it.orderId() == null));
         then(bikeDealer).should(never()).order(any());
+    }
+
+    @Test
+    @DisplayName("orderBike fails for an unknown application without asking the dealer")
+    public void orderBikeFailsForAnUnknownApplicationWithoutAskingTheDealer() {
+
+        // given: an id no application is stored for
+        ApplicationId unknownId = ApplicationId.newId();
+        given(repository.findById(unknownId)).willReturn(null);
+
+        // when / then: ordering fails with the unknown-application message, nothing is ordered or saved
+        assertThatThrownBy(() -> underTest.orderBike(unknownId, new BikeId("BIKE-900")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unknown application " + unknownId);
+        then(repository).should().findById(unknownId);
+        then(repository).shouldHaveNoMoreInteractions();
+        then(bikeDealer).shouldHaveNoInteractions();
     }
 }
