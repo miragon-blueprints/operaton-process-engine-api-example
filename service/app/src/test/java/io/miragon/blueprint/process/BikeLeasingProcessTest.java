@@ -1,6 +1,7 @@
 package io.miragon.blueprint.process;
 
 import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Variables;
 import io.miragon.blueprint.adapter.process.CancelBikeOrderProcessApi;
 import io.miragon.blueprint.application.port.inbound.ActivateLeasingUseCase;
 import io.miragon.blueprint.application.port.inbound.BookCancellationCostsUseCase;
@@ -28,6 +29,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.operaton.bpm.engine.HistoryService;
 import org.operaton.bpm.engine.ProcessEngine;
 import org.operaton.bpm.engine.RuntimeService;
@@ -47,6 +49,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.operaton.bpm.engine.test.assertions.bpmn.BpmnAwareTests.assertThat;
@@ -115,7 +118,7 @@ public class BikeLeasingProcessTest {
     @BeforeEach
     public void setUp() {
         init(processEngine);
-        given(orderBikeUseCase.orderBike(any())).willReturn(new OrderId("ORDER-1"));
+        given(orderBikeUseCase.orderBike(any(), any())).willReturn(new OrderId("ORDER-1"));
     }
 
     @Test
@@ -242,10 +245,13 @@ public class BikeLeasingProcessTest {
         ApplicationId id = submitUntilBikeUnavailable();
         ProcessInstance instance = findProcessInstance(runtimeService, id);
 
-        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any()); // the alternative is in stock
+        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any(), any()); // the alternative is in stock
         // the alternative is clarified from the outside — the "external" completion of the user task
         process.completeAlternativeClarification(id, true, new BikeId("BIKE-ALT"));
         continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
+        assertThat(instance)
+            .variables()
+            .containsEntry(Variables.UserTaskClarifyAlternative.BIKE_ID.getValue(), "BIKE-ALT");
 
         process.correlateHandoverReported(id);
         continueToNextWaitState(processEngine);
@@ -263,7 +269,9 @@ public class BikeLeasingProcessTest {
                 Elements.END_EVENT_CONTRACT_CANCELLED.getValue(),
                 Elements.END_EVENT_APPLICATION_REJECTED.getValue());
 
-        then(orderBikeUseCase).should(times(2)).orderBike(id);
+        InOrder orders = inOrder(orderBikeUseCase);
+        then(orderBikeUseCase).should(orders).orderBike(id, new BikeId("BIKE-TEST"));
+        then(orderBikeUseCase).should(orders).orderBike(id, new BikeId("BIKE-ALT"));
     }
 
     @Test
@@ -320,7 +328,7 @@ public class BikeLeasingProcessTest {
         ApplicationId id = submitUntilBikeUnavailable();
         ProcessInstance instance = findProcessInstance(runtimeService, id);
 
-        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any()); // the alternative is in stock
+        willReturn(new OrderId("ORDER-2")).given(orderBikeUseCase).orderBike(any(), any()); // the alternative is in stock
         process.completeAlternativeClarification(id, true, new BikeId("BIKE-ALT"));
         continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
 
@@ -347,7 +355,7 @@ public class BikeLeasingProcessTest {
 
     /** Drives a signed, insured application to the clarify-alternative task: the dealer has no bike. */
     private ApplicationId submitUntilBikeUnavailable() {
-        given(orderBikeUseCase.orderBike(any())).willThrow(new BikeUnavailableException(new BikeId("BIKE-TEST")));
+        given(orderBikeUseCase.orderBike(any(), any())).willThrow(new BikeUnavailableException(new BikeId("BIKE-TEST")));
 
         ApplicationId id = submit(35, 3500.0);
         continueToNextWaitState(processEngine); // parks on the signature wait state

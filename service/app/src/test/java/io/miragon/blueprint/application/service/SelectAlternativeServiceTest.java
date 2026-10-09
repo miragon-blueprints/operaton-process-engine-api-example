@@ -6,13 +6,14 @@ import io.miragon.blueprint.application.port.outbound.LeasingApplicationReposito
 import io.miragon.blueprint.application.port.outbound.LeasingProcess;
 import io.miragon.blueprint.domain.bike.Bike;
 import io.miragon.blueprint.domain.bike.BikeId;
+import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.miragon.blueprint.domain.leasing.TestObjectBuilder.testLeasingApplication;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -25,23 +26,21 @@ class SelectAlternativeServiceTest {
     private final SelectAlternativeService underTest = new SelectAlternativeService(repository, bikePortfolio, process);
 
     @Test
-    @DisplayName("an accepted alternative registers the new bike, points the application at it and completes the task")
-    void anAcceptedAlternativeRegistersTheNewBikePointsTheApplicationAtItAndCompletesTheTask() {
+    @DisplayName("an accepted alternative registers the new bike and hands it to the process")
+    void anAcceptedAlternativeRegistersTheNewBikeAndHandsItToTheProcess() {
 
         // given: an application whose requested bike was unavailable
         LeasingApplication application = testLeasingApplication().build();
         given(repository.findById(application.id())).willReturn(application);
         given(bikePortfolio.save(any())).willAnswer(inv -> inv.getArgument(0));
-        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         // when: an alternative bike is selected
         underTest.selectAlternative(
             new SelectAlternativeUseCase.Command(application.id(), true, new BikeId("BIKE-ALT"), "Aero Road 700"));
 
-        // then: the alternative is registered in the portfolio, the application points at it and the task is completed
+        // then: the alternative is registered in the portfolio and the task is completed with it; the order step stores it
         then(repository).should().findById(application.id());
         then(bikePortfolio).should().save(new Bike(new BikeId("BIKE-ALT"), "Aero Road 700"));
-        then(repository).should().save(argThat(saved -> saved.bikeId().equals(new BikeId("BIKE-ALT"))));
         then(process).should().completeAlternativeClarification(application.id(), true, new BikeId("BIKE-ALT"));
         then(repository).shouldHaveNoMoreInteractions();
         then(bikePortfolio).shouldHaveNoMoreInteractions();
@@ -65,5 +64,42 @@ class SelectAlternativeServiceTest {
         then(repository).shouldHaveNoMoreInteractions();
         then(bikePortfolio).shouldHaveNoMoreInteractions();
         then(process).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("an accepted alternative without a model hands the bike to the process and leaves the portfolio alone")
+    void anAcceptedAlternativeWithoutAModelHandsTheBikeToTheProcessAndLeavesThePortfolioAlone() {
+
+        // given: an application whose requested bike was unavailable
+        LeasingApplication application = testLeasingApplication().build();
+        given(repository.findById(application.id())).willReturn(application);
+
+        // when: an alternative bike is selected without naming its model
+        underTest.selectAlternative(
+            new SelectAlternativeUseCase.Command(application.id(), true, new BikeId("BIKE-ALT"), null));
+
+        // then: the task is completed with the bike, nothing is registered in the portfolio
+        then(repository).should().findById(application.id());
+        then(process).should().completeAlternativeClarification(application.id(), true, new BikeId("BIKE-ALT"));
+        then(repository).shouldHaveNoMoreInteractions();
+        then(bikePortfolio).shouldHaveNoInteractions();
+        then(process).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("an unknown application is refused before the user task is touched")
+    void anUnknownApplicationIsRefusedBeforeTheUserTaskIsTouched() {
+
+        // given: an id no application is stored for
+        ApplicationId unknownId = ApplicationId.newId();
+        given(repository.findById(unknownId)).willReturn(null);
+
+        // when / then: selecting fails with the unknown-application message, portfolio and process stay untouched
+        assertThatThrownBy(() -> underTest.selectAlternative(
+            new SelectAlternativeUseCase.Command(unknownId, true, new BikeId("BIKE-ALT"), "Aero Road 700")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unknown application " + unknownId);
+        then(bikePortfolio).shouldHaveNoInteractions();
+        then(process).shouldHaveNoInteractions();
     }
 }

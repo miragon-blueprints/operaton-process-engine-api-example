@@ -5,6 +5,7 @@ import io.miragon.blueprint.application.port.outbound.LeasingApplicationReposito
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.bike.BikeUnavailableException;
 import io.miragon.blueprint.domain.bike.OrderId;
+import io.miragon.blueprint.domain.leasing.ApplicationId;
 import io.miragon.blueprint.domain.leasing.LeasingApplication;
 import io.miragon.blueprint.domain.leasing.LeasingStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ public class OrderBikeServiceTest {
         given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         // when: the bike is ordered
-        OrderId orderId = underTest.orderBike(application.id());
+        OrderId orderId = underTest.orderBike(application.id(), application.bikeId());
 
         // then: the order id is returned and the application moves to ORDERED
         assertThat(orderId).isEqualTo(new OrderId("ORDER-900"));
@@ -47,6 +48,32 @@ public class OrderBikeServiceTest {
         then(repository).should().save(argThat(it ->
                 it.status() == LeasingStatus.ORDERED && new OrderId("ORDER-900").equals(it.orderId())));
         then(bikeDealer).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("orderBike orders the bike the process carries and stores it on the application")
+    public void orderBikeOrdersTheBikeTheProcessCarriesAndStoresItOnTheApplication() {
+
+        // given: an application still pointing at the bike that was requested first
+        LeasingApplication application = testLeasingApplication().bikeId(new BikeId("BIKE-OOS")).build();
+        BikeId alternative = new BikeId("BIKE-ALT");
+        given(repository.findById(application.id())).willReturn(application);
+        given(bikeDealer.checkAvailability(alternative)).willReturn(true);
+        given(bikeDealer.order(alternative)).willReturn(new OrderId("ORDER-ALT"));
+        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        // when: the process asks for the alternative bike
+        OrderId orderId = underTest.orderBike(application.id(), alternative);
+
+        // then: the alternative is checked, ordered and stored together with the order
+        assertThat(orderId).isEqualTo(new OrderId("ORDER-ALT"));
+        then(bikeDealer).should().checkAvailability(alternative);
+        then(bikeDealer).should().order(alternative);
+        then(repository).should().save(argThat(it ->
+                it.bikeId().equals(alternative) && new OrderId("ORDER-ALT").equals(it.orderId())));
+        then(repository).should().findById(application.id());
+        then(bikeDealer).shouldHaveNoMoreInteractions();
+        then(repository).shouldHaveNoMoreInteractions();
     }
 
     @Test
@@ -59,12 +86,47 @@ public class OrderBikeServiceTest {
         given(bikeDealer.checkAvailability(application.bikeId())).willReturn(false);
 
         // when / then: ordering reports the bike as unavailable and places no order
-        assertThatThrownBy(() -> underTest.orderBike(application.id()))
+        assertThatThrownBy(() -> underTest.orderBike(application.id(), application.bikeId()))
             .isInstanceOf(BikeUnavailableException.class)
             .hasMessage("Bike BIKE-OOS is not available at the dealer");
         then(bikeDealer).should().checkAvailability(application.bikeId());
         then(bikeDealer).should(never()).order(any());
-        then(repository).should(never()).save(any());
+        then(repository).should(never()).save(argThat(it -> it.orderId() != null));
         then(bikeDealer).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("orderBike keeps an unavailable alternative on the application")
+    public void orderBikeKeepsAnUnavailableAlternativeOnTheApplication() {
+
+        // given: an application whose alternative is out of stock as well
+        LeasingApplication application = testLeasingApplication().bikeId(new BikeId("BIKE-900")).build();
+        BikeId alternative = new BikeId("BIKE-OOS");
+        given(repository.findById(application.id())).willReturn(application);
+        given(bikeDealer.checkAvailability(alternative)).willReturn(false);
+
+        // when / then: the alternative is reported as unavailable, yet the application points at it
+        assertThatThrownBy(() -> underTest.orderBike(application.id(), alternative))
+            .isInstanceOf(BikeUnavailableException.class)
+            .hasMessage("Bike BIKE-OOS is not available at the dealer");
+        then(repository).should().save(argThat(it -> it.bikeId().equals(alternative) && it.orderId() == null));
+        then(bikeDealer).should(never()).order(any());
+    }
+
+    @Test
+    @DisplayName("orderBike fails for an unknown application without asking the dealer")
+    public void orderBikeFailsForAnUnknownApplicationWithoutAskingTheDealer() {
+
+        // given: an id no application is stored for
+        ApplicationId unknownId = ApplicationId.newId();
+        given(repository.findById(unknownId)).willReturn(null);
+
+        // when / then: ordering fails with the unknown-application message, nothing is ordered or saved
+        assertThatThrownBy(() -> underTest.orderBike(unknownId, new BikeId("BIKE-900")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Unknown application " + unknownId);
+        then(repository).should().findById(unknownId);
+        then(repository).shouldHaveNoMoreInteractions();
+        then(bikeDealer).shouldHaveNoInteractions();
     }
 }
