@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import static io.miragon.blueprint.domain.leasing.TestObjectBuilder.testLeasingApplication;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -25,23 +24,21 @@ class SelectAlternativeServiceTest {
     private final SelectAlternativeService underTest = new SelectAlternativeService(repository, bikePortfolio, process);
 
     @Test
-    @DisplayName("an accepted alternative registers the new bike, points the application at it and completes the task")
-    void anAcceptedAlternativeRegistersTheNewBikePointsTheApplicationAtItAndCompletesTheTask() {
+    @DisplayName("an accepted alternative registers the new bike and hands it to the process")
+    void anAcceptedAlternativeRegistersTheNewBikeAndHandsItToTheProcess() {
 
         // given: an application whose requested bike was unavailable
         LeasingApplication application = testLeasingApplication().build();
         given(repository.findById(application.id())).willReturn(application);
         given(bikePortfolio.save(any())).willAnswer(inv -> inv.getArgument(0));
-        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
         // when: an alternative bike is selected
         underTest.selectAlternative(
             new SelectAlternativeUseCase.Command(application.id(), true, new BikeId("BIKE-ALT"), "Aero Road 700"));
 
-        // then: the alternative is registered in the portfolio, the application points at it and the task is completed
+        // then: the alternative is registered in the portfolio and the task is completed with it; the order step stores it
         then(repository).should().findById(application.id());
         then(bikePortfolio).should().save(new Bike(new BikeId("BIKE-ALT"), "Aero Road 700"));
-        then(repository).should().save(argThat(saved -> saved.bikeId().equals(new BikeId("BIKE-ALT"))));
         then(process).should().completeAlternativeClarification(application.id(), true, new BikeId("BIKE-ALT"));
         then(repository).shouldHaveNoMoreInteractions();
         then(bikePortfolio).shouldHaveNoMoreInteractions();

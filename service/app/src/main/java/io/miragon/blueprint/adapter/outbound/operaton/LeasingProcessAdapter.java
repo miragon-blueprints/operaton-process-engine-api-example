@@ -126,9 +126,8 @@ public class LeasingProcessAdapter implements LeasingProcess {
         var taskId = awaitClarifyAlternativeTaskId(id);
         var variables = new HashMap<String, Object>();
         variables.put(Variables.UserTaskClarifyAlternative.ALTERNATIVE_FOUND.getValue(), alternativeFound);
-        // The re-order reads the same start-injected bike variable, so reuse its name.
         if (bikeId != null) {
-            variables.put(Variables.StartEventLeasingRequestReceived.BIKE_ID.getValue(), bikeId.value());
+            variables.put(Variables.UserTaskClarifyAlternative.BIKE_ID.getValue(), bikeId.value());
         }
         userTaskCompletionApi.completeTask(new CompleteTaskCmd(taskId, variables)).join();
     }

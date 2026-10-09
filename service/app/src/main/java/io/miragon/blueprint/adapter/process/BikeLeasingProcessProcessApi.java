@@ -208,6 +208,8 @@ public final class BikeLeasingProcessProcessApi {
     }
 
     public static final class ServiceTaskOrderBike {
+      public static final VariableName.Input BIKE_ID = new VariableName.Input("bikeId");
+
       public static final VariableName.Output ORDER_ID = new VariableName.Output("orderId");
     }
 
@@ -223,6 +225,8 @@ public final class BikeLeasingProcessProcessApi {
 
     public static final class UserTaskClarifyAlternative {
       public static final VariableName.Output ALTERNATIVE_FOUND = new VariableName.Output("alternativeFound");
+
+      public static final VariableName.Output BIKE_ID = new VariableName.Output("bikeId");
     }
   }
 

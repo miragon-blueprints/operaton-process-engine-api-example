@@ -19,6 +19,12 @@ public interface SelectAlternativeUseCase {
         @Nullable String bikeModel
     ) {
 
+        public Command {
+            if (alternativeFound && bikeId == null) {
+                throw new IllegalArgumentException("An accepted alternative must name the bike");
+            }
+        }
+
         public Command(ApplicationId applicationId, boolean alternativeFound) {
             this(applicationId, alternativeFound, null, null);
         }

@@ -149,11 +149,13 @@ read endpoints round out the API: `GET /api/bike-leasing` lists applications (pa
 returns the bike portfolio, and `GET /api/tasks/clarify-alternative` lists the open clarification
 tasks. Every endpoint is described by the committed, drift-gated `openapi/openapi.json`.
 
-If the requested bike is out of stock, the `Clarify alternative with customer` user task can be resolved
-**two ways**, a deliberate contrast:
+If the requested bike is out of stock, the `Clarify alternative with customer` user task shows a
+deliberate contrast:
 
-- the **recommended** path — a client calls `POST …/api/bike-leasing/{id}/clarify-alternative`, which
-  routes through the domain (persisting the chosen alternative) *before* completing the task; versus
+- it **reaches the domain either way** — a client calls `POST …/api/bike-leasing/{id}/clarify-alternative`,
+  or a human completes the Camunda Form in the Tasklist. Both hand the chosen `bikeId` to the process, and
+  the re-order reads it and persists it on the application. The REST call additionally registers the
+  bike's model in the portfolio; versus
 - the **form-only** path on `clarify-return` in `cancel-bike-order.bpmn`, kept as a counter-example:
   completing it via the Camunda Form or `/engine-rest` never touches the domain, so its data lands only
   in process variables (see the `bpmn:documentation` on each task).
