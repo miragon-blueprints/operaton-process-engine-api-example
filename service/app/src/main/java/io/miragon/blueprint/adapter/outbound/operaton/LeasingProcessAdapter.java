@@ -10,9 +10,8 @@ import dev.bpmcrafters.processengineapi.task.CompleteTaskCmd;
 import dev.bpmcrafters.processengineapi.task.TaskInformation;
 import dev.bpmcrafters.processengineapi.task.UserTaskCompletionApi;
 import dev.bpmcrafters.processengineapi.task.support.UserTaskSupport;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Messages;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Variables;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
+import io.miragon.blueprint.adapter.process.Messages;
 import io.miragon.blueprint.application.port.outbound.LeasingProcess;
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
@@ -60,11 +59,11 @@ public class LeasingProcessAdapter implements LeasingProcess {
     public void submitRequest(LeasingApplication application) {
         var key = application.id().value().toString();
         var payload = new HashMap<String, Object>();
-        payload.put(Variables.StartEventLeasingRequestReceived.APPLICATION_ID.getValue(), key);
-        payload.put(Variables.StartEventLeasingRequestReceived.BIKE_ID.getValue(), application.bikeId().value());
-        payload.put(Variables.StartEventLeasingRequestReceived.MONTHLY_NET_INCOME.getValue(),
+        payload.put(FlowNodes.StartEventLeasingRequestReceived.Variables.APPLICATION_ID.getValue(), key);
+        payload.put(FlowNodes.StartEventLeasingRequestReceived.Variables.BIKE_ID.getValue(), application.bikeId().value());
+        payload.put(FlowNodes.StartEventLeasingRequestReceived.Variables.MONTHLY_NET_INCOME.getValue(),
             application.monthlyNetIncome());
-        payload.put(Variables.StartEventLeasingRequestReceived.AGE.getValue(), application.age());
+        payload.put(FlowNodes.StartEventLeasingRequestReceived.Variables.AGE.getValue(), application.age());
         // Preserve the engine business key and seed the global correlation variable.
         payload.put(CommonRestrictions.BUSINESS_KEY, key);
         payload.put(CommonRestrictions.CORRELATION_KEY, key);
@@ -125,9 +124,9 @@ public class LeasingProcessAdapter implements LeasingProcess {
     public void completeAlternativeClarification(ApplicationId id, boolean alternativeFound, @Nullable BikeId bikeId) {
         var taskId = awaitClarifyAlternativeTaskId(id);
         var variables = new HashMap<String, Object>();
-        variables.put(Variables.UserTaskClarifyAlternative.ALTERNATIVE_FOUND.getValue(), alternativeFound);
+        variables.put(FlowNodes.UserTaskClarifyAlternative.Variables.ALTERNATIVE_FOUND.getValue(), alternativeFound);
         if (bikeId != null) {
-            variables.put(Variables.UserTaskClarifyAlternative.BIKE_ID.getValue(), bikeId.value());
+            variables.put(FlowNodes.UserTaskClarifyAlternative.Variables.BIKE_ID.getValue(), bikeId.value());
         }
         userTaskCompletionApi.completeTask(new CompleteTaskCmd(taskId, variables)).join();
     }
@@ -138,10 +137,10 @@ public class LeasingProcessAdapter implements LeasingProcess {
      */
     private String awaitClarifyAlternativeTaskId(ApplicationId id) {
         var applicationId = id.value().toString();
-        var applicationIdKey = Variables.StartEventLeasingRequestReceived.APPLICATION_ID.getValue();
+        var applicationIdKey = FlowNodes.StartEventLeasingRequestReceived.Variables.APPLICATION_ID.getValue();
         for (int attempt = 0; attempt < TASK_LOOKUP_ATTEMPTS; attempt++) {
             var task = userTaskSupport.getAllTasks().stream()
-                .filter(it -> Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue()
+                .filter(it -> FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID
                     .equals(it.getMeta().get(CommonRestrictions.ACTIVITY_ID)))
                 .filter(it -> belongsToApplication(it, applicationIdKey, applicationId))
                 .findFirst()
@@ -152,7 +151,7 @@ public class LeasingProcessAdapter implements LeasingProcess {
             sleep(TASK_LOOKUP_INTERVAL_MS);
         }
         throw new IllegalStateException(
-            "No open '" + Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue() + "' task for application "
+            "No open '" + FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID + "' task for application "
                 + applicationId);
     }
 

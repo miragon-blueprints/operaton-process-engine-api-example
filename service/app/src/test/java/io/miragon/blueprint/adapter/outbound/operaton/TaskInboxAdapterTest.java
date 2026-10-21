@@ -1,6 +1,6 @@
 package io.miragon.blueprint.adapter.outbound.operaton;
 
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import java.util.Date;
 import java.util.List;
@@ -44,7 +44,7 @@ class TaskInboxAdapterTest {
         // then: the open task surfaces as its application id, queried by the clarify-alternative key
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().applicationId()).isEqualTo(ApplicationId.of(applicationId));
-        then(taskQuery).should().taskDefinitionKey(Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue());
+        then(taskQuery).should().taskDefinitionKey(FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID);
     }
 
     @Test

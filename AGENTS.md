@@ -67,7 +67,8 @@ before writing code. The hard rules:
   root package, so `io.miragon.blueprint.config` would fail. Cross-cutting `@Configuration` (CORS,
   OpenAPI, error handling) goes in `adapter.inbound.rest` — the `Configuration` suffix is whitelisted
   there.
-- **`adapter/process` is generated.** Never hand-edit `*ProcessApi.java`; edit the `.bpmn` and re-run
+- **`adapter/process` is generated.** Never hand-edit `*ProcessApi.java` or the shared
+  `ServiceTasks`/`Messages`/`ProcessVariables`/`Errors`/`Escalations` files; edit the `.bpmn` and re-run
   `./mvnw -pl service/app generate-sources`.
 - **Service tasks are external topics.** A custom model rule (`ServiceTaskExternalTopicRule`) requires
   every service task to be an external task with a topic — no embedded delegates. The trade-offs
@@ -81,6 +82,8 @@ before writing code. The hard rules:
 
 - `bpmn-to-code` generates typed process constants from the models at build time; a custom model
   test requires every service task to be an external task with a topic.
+- Since bpmn-to-code 6 the API is node-centric: `<Process>ProcessApi.FlowNodes.<Node>` carries the
+  element (`ELEMENT_ID`, `INSTANCE`), its `Variables` and its successors (`Next`).
 - `bpmnlint` tooling lives at the **repo root** (`package.json`, `.bpmnlintrc`): `npm ci && npm run
   lint:bpmn`. It also runs on staged `.bpmn` via `.githooks/pre-commit` (install: `npm run hooks:install`).
 

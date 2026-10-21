@@ -1,7 +1,7 @@
 package io.miragon.blueprint.process.model;
 
 import io.miragon.bpmn.domain.shared.ProcessEngine;
-import io.miragon.bpmn.domain.validation.SingleModelValidationRule;
+import io.miragon.bpmn.domain.validation.ValidationRule;
 import io.miragon.bpmn.testing.BpmnRules;
 import io.miragon.bpmn.testing.BpmnValidator;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +20,7 @@ class BikeLeasingModelValidationTest {
     @Test
     @DisplayName("the bpmn models satisfy all rules and only use external task topics")
     void theBpmnModelsSatisfyAllRulesAndOnlyUseExternalTaskTopics() {
-        List<SingleModelValidationRule> rules = new ArrayList<>(BpmnRules.all());
+        List<ValidationRule> rules = new ArrayList<>(BpmnRules.all());
         rules.add(new ServiceTaskExternalTopicRule());
 
         BpmnValidator

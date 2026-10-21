@@ -1,7 +1,6 @@
 package io.miragon.blueprint.process;
 
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Variables;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
 import io.miragon.blueprint.adapter.process.CancelBikeOrderProcessApi;
 import io.miragon.blueprint.application.port.inbound.ActivateLeasingUseCase;
 import io.miragon.blueprint.application.port.inbound.BookCancellationCostsUseCase;
@@ -136,23 +135,23 @@ public class BikeLeasingProcessTest {
         process.correlateHandoverReported(id); // -> withdrawal-period timer
         continueToNextWaitState(processEngine);
 
-        fireTimer(processEngine, Elements.EVENT_WITHDRAWAL_PERIOD_ELAPSED);
+        fireTimer(processEngine, FlowNodes.EventWithdrawalPeriodElapsed.INSTANCE);
         continueToNextWaitState(processEngine);
 
         assertThat(instance)
             .isEnded()
             .hasPassedInOrder(
-                Elements.BUSINESS_RULE_TASK_CHECK_CREDIT_RATING.getValue(),
-                Elements.SERVICE_TASK_SEND_CONTRACT.getValue(),
-                Elements.SERVICE_TASK_ISSUE_INSURANCE_POLICY.getValue(),
-                Elements.EVENT_HANDOVER_REPORTED.getValue(),
-                Elements.SERVICE_TASK_ACTIVATE_LEASING.getValue(),
-                Elements.END_EVENT_LEASING_ACTIVE.getValue())
+                FlowNodes.BusinessRuleTaskCheckCreditRating.ELEMENT_ID,
+                FlowNodes.ServiceTaskSendContract.ELEMENT_ID,
+                FlowNodes.ServiceTaskIssueInsurancePolicy.ELEMENT_ID,
+                FlowNodes.EventHandoverReported.ELEMENT_ID,
+                FlowNodes.ServiceTaskActivateLeasing.ELEMENT_ID,
+                FlowNodes.EndEventLeasingActive.ELEMENT_ID)
             .hasNotPassed(
-                Elements.EVENT_BIKE_UNAVAILABLE.getValue(),
-                Elements.END_EVENT_APPLICATION_REJECTED.getValue(),
-                Elements.END_EVENT_APPLICATION_CANCELLED.getValue(),
-                Elements.END_EVENT_CONTRACT_CANCELLED.getValue());
+                FlowNodes.EventBikeUnavailable.ELEMENT_ID,
+                FlowNodes.EndEventApplicationRejected.ELEMENT_ID,
+                FlowNodes.EndEventApplicationCancelled.ELEMENT_ID,
+                FlowNodes.EndEventContractCancelled.ELEMENT_ID);
 
         then(sendContractUseCase).should(times(1)).sendContract(id);
         then(issueInsurancePolicyUseCase).should(times(1)).issuePolicy(id);
@@ -167,17 +166,17 @@ public class BikeLeasingProcessTest {
 
         continueToNextWaitState(processEngine); // parks on the signature wait state
 
-        fireTimer(processEngine, Elements.EVENT_SIGNATURE_DEADLINE); // deadline -> escalation -> rejection
+        fireTimer(processEngine, FlowNodes.EventSignatureDeadline.INSTANCE); // deadline -> escalation -> rejection
         continueToNextWaitState(processEngine);
 
         assertThat(instance)
             .isEnded()
             .hasPassed(
-                Elements.EVENT_SIGNATURE_DEADLINE.getValue(),
-                Elements.EVENT_CONTRACT_NOT_SIGNED.getValue(),
-                Elements.SERVICE_TASK_SEND_REJECTION.getValue(),
-                Elements.END_EVENT_APPLICATION_REJECTED.getValue())
-            .hasNotPassed(Elements.END_EVENT_LEASING_ACTIVE.getValue());
+                FlowNodes.EventSignatureDeadline.ELEMENT_ID,
+                FlowNodes.EventContractNotSigned.ELEMENT_ID,
+                FlowNodes.ServiceTaskSendRejection.ELEMENT_ID,
+                FlowNodes.EndEventApplicationRejected.ELEMENT_ID)
+            .hasNotPassed(FlowNodes.EndEventLeasingActive.ELEMENT_ID);
 
         then(rejectApplicationUseCase).should(times(1)).reject(id);
     }
@@ -215,7 +214,7 @@ public class BikeLeasingProcessTest {
         Task task =
             taskService
                 .createTaskQuery()
-                .taskDefinitionKey(CancelBikeOrderProcessApi.Elements.USER_TASK_CLARIFY_RETURN.getValue())
+                .taskDefinitionKey(CancelBikeOrderProcessApi.FlowNodes.UserTaskClarifyReturn.ELEMENT_ID)
                 .singleResult();
         taskService.complete(task.getId(), Map.of("returnClarified", true));
         continueToNextWaitState(processEngine);
@@ -223,12 +222,12 @@ public class BikeLeasingProcessTest {
         assertThat(instance)
             .isEnded()
             .hasPassed(
-                Elements.SERVICE_TASK_CANCEL_CONTRACT.getValue(),
-                Elements.SERVICE_TASK_CANCEL_POLICY.getValue(),
-                Elements.CALL_ACTIVITY_CANCEL_BIKE_ORDER.getValue(),
-                Elements.SERVICE_TASK_SEND_CANCELLATION_CONFIRMATION.getValue(),
-                Elements.END_EVENT_APPLICATION_CANCELLED.getValue())
-            .hasNotPassed(Elements.END_EVENT_LEASING_ACTIVE.getValue());
+                FlowNodes.ServiceTaskCancelContract.ELEMENT_ID,
+                FlowNodes.ServiceTaskCancelPolicy.ELEMENT_ID,
+                FlowNodes.CallActivityCancelBikeOrder.ELEMENT_ID,
+                FlowNodes.ServiceTaskSendCancellationConfirmation.ELEMENT_ID,
+                FlowNodes.EndEventApplicationCancelled.ELEMENT_ID)
+            .hasNotPassed(FlowNodes.EndEventLeasingActive.ELEMENT_ID);
 
         // External-task delivery is at-least-once: while compensation runs several handlers in
         // parallel, an async continuation firing on the test thread can force an optimistic-locking
@@ -251,23 +250,23 @@ public class BikeLeasingProcessTest {
         continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
         assertThat(instance)
             .variables()
-            .containsEntry(Variables.UserTaskClarifyAlternative.BIKE_ID.getValue(), "BIKE-ALT");
+            .containsEntry(FlowNodes.UserTaskClarifyAlternative.Variables.BIKE_ID.getValue(), "BIKE-ALT");
 
         process.correlateHandoverReported(id);
         continueToNextWaitState(processEngine);
-        fireTimer(processEngine, Elements.EVENT_WITHDRAWAL_PERIOD_ELAPSED);
+        fireTimer(processEngine, FlowNodes.EventWithdrawalPeriodElapsed.INSTANCE);
         continueToNextWaitState(processEngine);
 
         assertThat(instance)
             .isEnded()
             .hasPassed(
-                Elements.EVENT_BIKE_UNAVAILABLE.getValue(),
-                Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue(),
-                Elements.SERVICE_TASK_ORDER_BIKE.getValue(),
-                Elements.END_EVENT_LEASING_ACTIVE.getValue())
+                FlowNodes.EventBikeUnavailable.ELEMENT_ID,
+                FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID,
+                FlowNodes.ServiceTaskOrderBike.ELEMENT_ID,
+                FlowNodes.EndEventLeasingActive.ELEMENT_ID)
             .hasNotPassed(
-                Elements.END_EVENT_CONTRACT_CANCELLED.getValue(),
-                Elements.END_EVENT_APPLICATION_REJECTED.getValue());
+                FlowNodes.EndEventContractCancelled.ELEMENT_ID,
+                FlowNodes.EndEventApplicationRejected.ELEMENT_ID);
 
         InOrder orders = inOrder(orderBikeUseCase);
         then(orderBikeUseCase).should(orders).orderBike(id, new BikeId("BIKE-TEST"));
@@ -286,14 +285,14 @@ public class BikeLeasingProcessTest {
         assertThat(instance)
             .isEnded()
             .hasPassed(
-                Elements.EVENT_TRIGGER_REVERSAL.getValue(),
-                Elements.SERVICE_TASK_CANCEL_CONTRACT.getValue(),
-                Elements.SERVICE_TASK_CANCEL_POLICY.getValue(),
-                Elements.SERVICE_TASK_CONFIRM_CONTRACT_CANCELLATION.getValue(),
-                Elements.END_EVENT_CONTRACT_CANCELLED.getValue())
+                FlowNodes.EventTriggerReversal.ELEMENT_ID,
+                FlowNodes.ServiceTaskCancelContract.ELEMENT_ID,
+                FlowNodes.ServiceTaskCancelPolicy.ELEMENT_ID,
+                FlowNodes.ServiceTaskConfirmContractCancellation.ELEMENT_ID,
+                FlowNodes.EndEventContractCancelled.ELEMENT_ID)
             .hasNotPassed(
-                Elements.CALL_ACTIVITY_CANCEL_BIKE_ORDER.getValue(),
-                Elements.END_EVENT_LEASING_ACTIVE.getValue());
+                FlowNodes.CallActivityCancelBikeOrder.ELEMENT_ID,
+                FlowNodes.EndEventLeasingActive.ELEMENT_ID);
 
         then(sendCancellationConfirmationUseCase).should(atLeast(1)).sendCancellationConfirmation(id);
         then(requestOrderCancellationUseCase).should(never()).requestCancellation(any());
@@ -311,11 +310,11 @@ public class BikeLeasingProcessTest {
         assertThat(instance)
             .isEnded()
             .hasPassed(
-                Elements.SERVICE_TASK_CANCEL_CONTRACT.getValue(),
-                Elements.SERVICE_TASK_CANCEL_POLICY.getValue(),
-                Elements.SERVICE_TASK_SEND_CANCELLATION_CONFIRMATION.getValue(),
-                Elements.END_EVENT_APPLICATION_CANCELLED.getValue())
-            .hasNotPassed(Elements.CALL_ACTIVITY_CANCEL_BIKE_ORDER.getValue());
+                FlowNodes.ServiceTaskCancelContract.ELEMENT_ID,
+                FlowNodes.ServiceTaskCancelPolicy.ELEMENT_ID,
+                FlowNodes.ServiceTaskSendCancellationConfirmation.ELEMENT_ID,
+                FlowNodes.EndEventApplicationCancelled.ELEMENT_ID)
+            .hasNotPassed(FlowNodes.CallActivityCancelBikeOrder.ELEMENT_ID);
 
         then(requestOrderCancellationUseCase).should(never()).requestCancellation(any());
     }
@@ -338,12 +337,12 @@ public class BikeLeasingProcessTest {
         Task task =
             taskService
                 .createTaskQuery()
-                .taskDefinitionKey(CancelBikeOrderProcessApi.Elements.USER_TASK_CLARIFY_RETURN.getValue())
+                .taskDefinitionKey(CancelBikeOrderProcessApi.FlowNodes.UserTaskClarifyReturn.ELEMENT_ID)
                 .singleResult();
         taskService.complete(task.getId(), Map.of("returnClarified", true));
         continueToNextWaitState(processEngine);
 
-        assertThat(instance).isEnded().hasPassed(Elements.END_EVENT_APPLICATION_CANCELLED.getValue());
+        assertThat(instance).isEnded().hasPassed(FlowNodes.EndEventApplicationCancelled.ELEMENT_ID);
         long orderCancellations =
             historyService
                 .createHistoricProcessInstanceQuery()

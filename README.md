@@ -72,8 +72,11 @@ docs/{README.md, adr/, assets/} ADR index + records + the process diagram
 - **Stack:** Java 21 · Spring Boot 4 · Operaton 2.1 (embedded) · process-engine-api (bpm-crafters) · PostgreSQL · Maven
   multi-module (`./mvnw`), versions centralized in the root `pom.xml`.
 - **Generated process API:** the [`bpmn-to-code`](https://github.com/emaarco/bpmn-to-code) Maven
-  plugin turns each `.bpmn` into a typed `*ProcessApi` class, so element ids, messages, timers and
-  variables are compile-checked constants used by both delegates and tests.
+  plugin turns each `.bpmn` into a typed `*ProcessApi` class plus shared `ServiceTasks`, `Messages`,
+  `ProcessVariables`, `Errors` and `Escalations` files. Since 6.x the API is node-centric:
+  `<Process>ProcessApi.FlowNodes.<Node>` carries the element id (`ELEMENT_ID`), its `Variables` and its
+  successors (`Next`), so element ids, messages, timers and variables are compile-checked constants used
+  by both workers and tests.
 - **Forms:** Camunda Forms (`.form`) are deployed with the process and render in the Operaton
   Tasklist/Cockpit for the user tasks.
 - **BPMN linting:** [`bpmnlint`](https://github.com/bpmn-io/bpmnlint) (`bpmnlint:recommended` plus

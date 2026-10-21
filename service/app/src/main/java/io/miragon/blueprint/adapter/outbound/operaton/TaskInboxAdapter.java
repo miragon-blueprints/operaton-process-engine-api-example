@@ -1,6 +1,6 @@
 package io.miragon.blueprint.adapter.outbound.operaton;
 
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
 import io.miragon.blueprint.application.port.outbound.TaskInboxPort;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import java.time.ZoneId;
@@ -38,7 +38,7 @@ public class TaskInboxAdapter implements TaskInboxPort {
 
     @Override
     public List<TaskInboxPort.OpenClarification> findOpenClarifications() {
-        var tasks = findOpenTasks(Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue());
+        var tasks = findOpenTasks(FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID);
         var businessKeys = businessKeysById(tasks.stream().map(Task::getProcessInstanceId).toList());
         var clarifications = new ArrayList<TaskInboxPort.OpenClarification>();
         for (var task : tasks) {

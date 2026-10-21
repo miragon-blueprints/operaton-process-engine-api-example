@@ -3,9 +3,9 @@ package io.miragon.blueprint.adapter.inbound.operaton;
 import dev.bpmcrafters.processengine.worker.BpmnErrorOccurred;
 import dev.bpmcrafters.processengine.worker.ProcessEngineWorker;
 import dev.bpmcrafters.processengine.worker.Variable;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Errors;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.ServiceTasks;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Variables;
+import io.miragon.blueprint.adapter.process.Errors;
+import io.miragon.blueprint.adapter.process.ServiceTasks;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
 import io.miragon.blueprint.application.port.inbound.OrderBikeUseCase;
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.bike.BikeUnavailableException;
@@ -34,7 +34,7 @@ public class OrderBikeWorker {
         throws BpmnErrorOccurred {
         try {
             OrderId orderId = useCase.orderBike(ApplicationId.of(applicationId), new BikeId(bikeId));
-            return Map.of(Variables.ServiceTaskOrderBike.ORDER_ID.getValue(), orderId.value());
+            return Map.of(FlowNodes.ServiceTaskOrderBike.Variables.ORDER_ID.getValue(), orderId.value());
         } catch (BikeUnavailableException e) {
             throw new BpmnErrorOccurred(e.getMessage(), Errors.BIKE_UNAVAILABLE.getCode(), Map.of());
         }
