@@ -1,7 +1,6 @@
 package io.miragon.blueprint.process;
 
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Variables;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
 import io.miragon.blueprint.application.port.outbound.LeasingApplicationRepository;
 import io.miragon.blueprint.application.port.outbound.LeasingProcess;
 import io.miragon.blueprint.domain.bike.BikeId;
@@ -84,8 +83,8 @@ public class BikeUnavailableTransactionTest {
         continueToNextWaitState(processEngine); // fork -> order raises bikeUnavailable -> parks on clarify-alternative
 
         assertThat(instance)
-            .isWaitingAt(Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue())
-            .hasPassed(Elements.EVENT_BIKE_UNAVAILABLE.getValue());
+            .isWaitingAt(FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID)
+            .hasPassed(FlowNodes.EventBikeUnavailable.ELEMENT_ID);
         Assertions.assertThat(runtimeService.createIncidentQuery().processInstanceId(instance.getId()).count())
             .isZero();
     }
@@ -104,16 +103,16 @@ public class BikeUnavailableTransactionTest {
             taskService
                 .createTaskQuery()
                 .processInstanceId(instance.getId())
-                .taskDefinitionKey(Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue())
+                .taskDefinitionKey(FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID)
                 .singleResult();
         taskService.complete(
             task.getId(),
             Map.of(
-                Variables.UserTaskClarifyAlternative.ALTERNATIVE_FOUND.getValue(), true,
-                Variables.UserTaskClarifyAlternative.BIKE_ID.getValue(), "BIKE-900"));
+                FlowNodes.UserTaskClarifyAlternative.Variables.ALTERNATIVE_FOUND.getValue(), true,
+                FlowNodes.UserTaskClarifyAlternative.Variables.BIKE_ID.getValue(), "BIKE-900"));
         continueToNextWaitState(processEngine); // re-order succeeds -> parallel join -> handover wait state
 
-        assertThat(instance).isWaitingAt(Elements.EVENT_HANDOVER_REPORTED.getValue());
+        assertThat(instance).isWaitingAt(FlowNodes.EventHandoverReported.ELEMENT_ID);
         LeasingApplication stored = repository.findById(application.id());
         Assertions.assertThat(stored.bikeId()).isEqualTo(new BikeId("BIKE-900"));
         Assertions.assertThat(stored.status()).isEqualTo(LeasingStatus.ORDERED);
@@ -129,7 +128,7 @@ public class BikeUnavailableTransactionTest {
 
         signContractAndRunIntoTheUnavailableBike(application.id());
 
-        assertThat(instance).isWaitingAt(Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue());
+        assertThat(instance).isWaitingAt(FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID);
         Assertions.assertThat(repository.findById(application.id()).bikeId()).isEqualTo(new BikeId("BIKE-OOS"));
     }
 

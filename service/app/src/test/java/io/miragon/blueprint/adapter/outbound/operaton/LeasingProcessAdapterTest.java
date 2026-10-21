@@ -11,8 +11,8 @@ import dev.bpmcrafters.processengineapi.task.CompleteTaskCmd;
 import dev.bpmcrafters.processengineapi.task.TaskInformation;
 import dev.bpmcrafters.processengineapi.task.UserTaskCompletionApi;
 import dev.bpmcrafters.processengineapi.task.support.UserTaskSupport;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Elements;
-import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.Messages;
+import io.miragon.blueprint.adapter.process.BikeLeasingProcessProcessApi.FlowNodes;
+import io.miragon.blueprint.adapter.process.Messages;
 import io.miragon.blueprint.domain.bike.BikeId;
 import io.miragon.blueprint.domain.leasing.ApplicationId;
 import java.util.List;
@@ -81,7 +81,7 @@ class LeasingProcessAdapterTest {
         // given: an open clarify-alternative task delivered to the user-task pool for this application
         var task = new TaskInformation(
             "task-1",
-            Map.of(CommonRestrictions.ACTIVITY_ID, Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue())
+            Map.of(CommonRestrictions.ACTIVITY_ID, FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID)
         );
         given(userTaskSupport.getAllTasks()).willReturn(List.of(task));
         given(userTaskSupport.getPayload("task-1")).willReturn(Map.of("applicationId", id.value().toString()));
@@ -238,7 +238,7 @@ class LeasingProcessAdapterTest {
     private TaskInformation clarifyAlternativeTask(String taskId) {
         return new TaskInformation(
             taskId,
-            Map.of(CommonRestrictions.ACTIVITY_ID, Elements.USER_TASK_CLARIFY_ALTERNATIVE.getValue())
+            Map.of(CommonRestrictions.ACTIVITY_ID, FlowNodes.UserTaskClarifyAlternative.ELEMENT_ID)
         );
     }
 

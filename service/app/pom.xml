@@ -226,6 +226,11 @@
                     <failWhenNoMutations>false</failWhenNoMutations>
                     <excludedClasses>
                         <param>io.miragon.blueprint.adapter.process.*ProcessApi*</param>
+                        <param>io.miragon.blueprint.adapter.process.ServiceTasks*</param>
+                        <param>io.miragon.blueprint.adapter.process.Messages*</param>
+                        <param>io.miragon.blueprint.adapter.process.ProcessVariables*</param>
+                        <param>io.miragon.blueprint.adapter.process.Errors*</param>
+                        <param>io.miragon.blueprint.adapter.process.Escalations*</param>
                         <param>io.miragon.blueprint.adapter.process.HistoryCleanupConfiguration*</param>
                         <param>io.miragon.blueprint.adapter.process.EngineApiConfiguration*</param>
                         <param>io.miragon.blueprint.OperatonBikeLeasingApplication*</param>

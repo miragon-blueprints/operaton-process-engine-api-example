@@ -1,6 +1,7 @@
 package io.miragon.blueprint.process.model;
 
 import io.miragon.bpmn.domain.shared.ServiceTaskDefinition;
+import io.miragon.bpmn.domain.shared.TaskImplementation;
 import io.miragon.bpmn.domain.validation.SingleModelValidationRule;
 import io.miragon.bpmn.domain.validation.model.Severity;
 import io.miragon.bpmn.domain.validation.model.SingleModelValidationContext;
@@ -18,8 +19,6 @@ import java.util.List;
  * implementation at all are left to the built-in {@code MISSING_SERVICE_TASK_IMPLEMENTATION} rule.
  */
 public class ServiceTaskExternalTopicRule implements SingleModelValidationRule {
-
-    private static final String EXTERNAL_TASK_KIND = "EXTERNAL_TASK";
 
     @Override
     public String getId() {
@@ -46,7 +45,6 @@ public class ServiceTaskExternalTopicRule implements SingleModelValidationRule {
     }
 
     private boolean usesExternalTask(ServiceTaskDefinition task) {
-        return task.getEngineSpecificProperties().get(ServiceTaskDefinition.IMPL_KIND_KEY) instanceof String kind
-            && EXTERNAL_TASK_KIND.equals(kind);
+        return task.getImplementation() instanceof TaskImplementation.ExternalTask;
     }
 }
